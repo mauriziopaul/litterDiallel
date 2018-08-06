@@ -6,7 +6,7 @@
 ## Date Updated: 2018-08-05
 ##---------------------------------------------------------------------------------------------------------------------
 
-#' litterDiallel: A package to help reproduce the analysis used the litter diallel manuscript.
+#' litterDiallel: A package for reproducing the analysis used in the litter diallel manuscript.
 #' 
 #' @docType package
 
