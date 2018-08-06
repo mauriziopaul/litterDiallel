@@ -2,7 +2,7 @@
 
 ## Summary
 
-This package has functions that are useful for reproducing the analysis in the litter diallel manuscript.
+This package has functions that are useful for reproducing the analysis in our litter diallel manuscript.
 
 ## Installation
 
