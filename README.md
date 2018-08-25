@@ -6,7 +6,7 @@ This package has functions that are useful for reproducing the analysis in our l
 
 ## Installation
 
-You can install `litterDiallel` using the following steps. First, download the `WVmisc` package from the following URL: [packages](https://github.com/mauriziopaul/flu-diallel/tree/master/packages). From the download directory, complete the following steps in R.
+You can install `litterDiallel` using the following steps. Please make sure `devtools` is installed in R.
 
 1. Install dependency in R:
 
@@ -19,6 +19,8 @@ install.packages("MCMCglmm")
 ```
 devtools::install_github("mauriziopaul/litterDiallel")
 ```
+
+## Notes
 
 It may also be useful to install BayesDiallel. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
 
