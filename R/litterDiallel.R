@@ -13,15 +13,22 @@
 #' @name litterDiallel
 NULL
 
-#' @importFrom WVmisc incidence.matrix
-NULL
-
-#' @importFrom grDevices dev.off pdf png rgb
-NULL
-
 #' @section require namespaces:
-requireNamespace("WVmisc", quietly=TRUE)
 requireNamespace("MCMCglmm", quietly=TRUE)
+
+#' @title incidence.matrix: Make an incidence matrix (from WVmisc package, Will Valdar)
+#' @description Convert a factor into an incidence matrix
+#' @param fact factor
+#' @param ... additional arguments
+#' @return generates an incidence matrix
+#' @examples
+#' ## not run
+#' @export
+incidence.matrix <- function(fact, ...){
+    m = diag(nlevels(fact))[fact, ]
+    colnames(m) = levels(fact)
+    m
+}
 
 #' @title makeRotationMatrix: Make a rotation matrix
 #' @description Turn an n-column design matrix into an n-1, sum to 0, design matrix

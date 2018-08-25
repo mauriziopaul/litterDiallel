@@ -2,9 +2,5 @@
 
 export(diallelMatrixMakeAndRotate)
 export(diallelMatrixMaker)
+export(incidence.matrix)
 export(makeRotationMatrix)
-importFrom(WVmisc,incidence.matrix)
-importFrom(grDevices,dev.off)
-importFrom(grDevices,pdf)
-importFrom(grDevices,png)
-importFrom(grDevices,rgb)
