@@ -30,6 +30,65 @@ incidence.matrix <- function(fact, ...){
     m
 }
 
+#' @title plot.hpd: Plot highest posterior density intervals (from BayesDiallel package, Will Valdar and Alan Lenarcic)
+#' @description Plot HPD intervals.
+#' @param coda.object coda object
+#' @param wanted variable names for coda object
+#' @param prob.wide outer width of posterior probability
+#' @param prob.narrow inner width of posterior probability
+#' @param xlab x-axis label
+#' @param names names
+#' @param type type of plot
+#' @param name.margin margin for name
+#' @param plt.left left of plot margin
+#' @param plt.right right of plot margin
+#' @param plt.bottom bottom of plot margin
+#' @param plt.title title of plot margin
+#' @param ylab y-axis label
+#' @param name.line line where names should be printed
+#' @param main text of main title
+#' @param main.line line where main title should be printed
+#' @param ... additional arguments
+#' @return returns HPD plot
+#' @examples
+#' ## not run
+#' @export
+plot.hpd <- function(coda.object,
+    wanted=varnames(coda.object),
+    prob.wide=0.95,
+    prob.narrow=0.50,
+    xlab="HPD interval",
+    names=NULL,
+    type="p",
+    name.margin = 6.1,
+    plt.left=NULL, plt.right=NULL, plt.bottom=NULL, plt.title=NULL,
+    ylab="",  name.line = 3.9, main="", main.line=2,
+    ...)
+{
+  which.wanted=ifow(is.integer(wanted), wanted, match(wanted, varnames(coda.object)))
+  num.wanted=length(which.wanted)
+  if(!exists("name.margin") || is.null(name.margin)) { name.margin = 6.1; }
+  chain <- mcmc.stack(coda.object)
+  mu    <- colMeans(chain[,which.wanted])
+  med   <- apply(coda::HPDinterval(chain, prob=0.01)[which.wanted,],
+      1, mean)
+  hpd.wide    <- coda::HPDinterval(chain, prob=prob.wide)[which.wanted,]
+  hpd.narrow  <- coda::HPDinterval(chain, prob=prob.narrow)[which.wanted,]
+  
+    mid.vals <- med;
+  if (is.null(names)) names <- varnames(chain)[which.wanted]
+  else names <- rep(names, length.out=length(wanted))
+  ypos <- plot.ci(med, hpd.narrow, hpd.wide, names=names, xlab=xlab, col.midvals="white", pch.midvals="|", type=type, 
+    name.margin=name.margin,plt.left=plt.left, plt.right=plt.right, 
+    plt.bottom=plt.bottom, plt.title=plt.title, ylab=ylab, 
+    name.line = name.line, main=main, main.line=main.line, ...)
+  if ("p"==type)
+  {
+    points(mu, ypos, pch="|")
+  }
+  invisible(ypos)
+}
+
 #' @title makeRotationMatrix: Make a rotation matrix
 #' @description Turn an n-column design matrix into an n-1, sum to 0, design matrix
 #'              while maintaining independence. 
