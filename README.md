@@ -42,7 +42,7 @@ You can install `litterDiallel` using the following steps. First, please make su
 
 ## Notes
 
-- [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html) and [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
+- [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
 
 - [ ] For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
 
