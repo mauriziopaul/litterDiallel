@@ -16,20 +16,28 @@ devtools::install_version("MCMCglmm", version = "2.25", repos = "http://cran.us.
 
 2. Install `litterDiallel`:
 
-```
+```R
 devtools::install_github("mauriziopaul/litterDiallel")
 ```
 
-You should then be able to load the package in R:
+## Using the Package
 
-```
+3. You should then be able to load the package in R:
+
+```R
 library(litterDiallel)
 ``` 
 
-To load the data set, `litters`, use:
+4. To load the data set, `litters`, use:
 
-```
+```R
 data("litters")
+```
+
+5. For an overview of the analysis, see the vignette:
+
+```R
+vignette("my-vignette")
 ```
 
 ## Notes
@@ -38,12 +46,12 @@ A. For the model inclusion probability analysis, BayesDiallel and BayesSpike mus
 
 B. For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
 
-```
+```R
 devtools::install_github("mauriziopaul/PLMcctools")
 ```
 
 C. To install other suggested packages, use:
 
-```
+```R
 install.packages(c("tools", "data.table", "xtable"))
 ```
