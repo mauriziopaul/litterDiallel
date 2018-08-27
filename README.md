@@ -42,15 +42,15 @@ vignette("my-vignette")
 
 ## Notes
 
-A. For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html) and [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
+- [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html) and [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
 
-B. For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
+- [ ] For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
 
 ```R
 devtools::install_github("mauriziopaul/PLMcctools")
 ```
 
-C. To install other suggested packages, use:
+- [ ] To install other suggested packages, use:
 
 ```R
 install.packages(c("tools", "data.table", "xtable"))
