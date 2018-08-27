@@ -10,7 +10,7 @@ You can install `litterDiallel` using the following steps. First, please make su
 
 1. Install MCMCglmm (for compatibility, must be version 2.25) in R:
 
-```
+```R
 devtools::install_version("MCMCglmm", version = "2.25", repos = "http://cran.us.r-project.org")
 ```
 
