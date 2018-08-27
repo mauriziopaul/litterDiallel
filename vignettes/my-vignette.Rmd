@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Analyzing the litter diallel}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
@@ -16,3 +17,30 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Load packages
+
+```R
+library("MCMCglmm")
+library("litterDiallel")
+library("PLMcctools")
+library("xtable")
+```
+
+## Load data, add column
+
+```R
+data("litters")
+litters$inbred <- ifelse(litters$Dam_Founder == litters$Sire_Founder, 1, 0)
+```
+
+## Generate design matrices
+
+```R
+litters <- litters
+matrices <- diallelMatrixMaker(data=litters, dam.col.name="Dam_Founder", sire.col.name="Sire_Founder", 
+                               batch.col.name="YearMonth", batch.1.col.name="litterorder")
+M.matrices <- diallelMatrixMakeAndRotate(litters, dam.col.name="Dam_Founder", 
+  sire.col.name="Sire_Founder", batch.col.name="YearMonth", batch.1.col.name="litterorder")[[1]]
+t.matrices <- diallelMatrixMakeAndRotate(litters, dam.col.name="Dam_Founder", 
+  sire.col.name="Sire_Founder", batch.col.name="YearMonth", batch.1.col.name="litterorder")[[2]]
+```
