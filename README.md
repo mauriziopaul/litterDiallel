@@ -17,7 +17,7 @@ You can install `litterDiallel` using the following steps. First, please make su
 2. Install `litterDiallel`:
 
     ```R
-    devtools::install_github("mauriziopaul/litterDiallel")
+    devtools::install_github("mauriziopaul/litterDiallel", build_vignettes=TRUE)
     ```
 
 ## Using the Package
@@ -37,7 +37,7 @@ You can install `litterDiallel` using the following steps. First, please make su
 5. For an overview of the analysis, see the vignette:
 
     ```R
-    vignette("my-vignette")
+    browseVignettes("litterDiallel")
     ```
 
 ## Notes
