@@ -19,7 +19,14 @@ devtools::install_version("MCMCglmm", version = "2.25", repos = "http://cran.us.
 ```
 devtools::install_github("mauriziopaul/litterDiallel")
 ```
-You should then be able to load the package using `library(litterDiallel)` in R. To load the data set, `litters`, use:
+
+You should then be able to load the package in R:
+
+```
+library(litterDiallel)
+``` 
+
+To load the data set, `litters`, use:
 
 ```
 data("litters")
