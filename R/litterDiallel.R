@@ -3,7 +3,7 @@
 ## Author: Paul L. Maurizio
 ## Email: paul.maurizio@gmail.com
 ## Date Created: 2018-08-05
-## Date Updated: 2018-08-25
+## Date Updated: 2018-08-27
 ##---------------------------------------------------------------------------------------------------------------------
 
 #' litterDiallel: A package for reproducing the analysis used in the litter diallel manuscript.
