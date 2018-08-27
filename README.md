@@ -27,4 +27,16 @@ data("litters")
 
 ## Notes
 
-For the model inclusion probability analysis, BayesDiallel must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
+A. For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html) and [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
+
+B. For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
+
+```
+devtools::install_github("mauriziopaul/PLMcctools")
+```
+
+C. To install other suggested packages, use:
+
+```
+install.packages(c("tools", "data.table", "xtable"))
+```

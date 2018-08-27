@@ -12,6 +12,13 @@ Description: This package provides the functions necessary for reproducing
 Depends: R (>= 3.1.0)
 Imports:
 	MCMCglmm
+Suggests:
+	PLMcctools
+	tools
+	BayesDiallel
+	BayesSpike
+	data.table
+	xtable
 License: GPL-3
 URL: http://mauriziopaul.github.io/
 Encoding: UTF-8
