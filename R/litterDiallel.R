@@ -16,8 +16,8 @@ NULL
 #' @section require namespaces:
 requireNamespace("MCMCglmm", quietly=TRUE)
 
-#' @title incidence.matrix: Make an incidence matrix (from WVmisc package, Will Valdar)
-#' @description Convert a factor into an incidence matrix
+#' @title incidence.matrix: Make an incidence matrix
+#' @description Convert a factor into an incidence matrix. (From the WVmisc package, Will Valdar).
 #' @param fact factor
 #' @param ... additional arguments
 #' @return generates an incidence matrix
@@ -30,8 +30,8 @@ incidence.matrix <- function(fact, ...){
     m
 }
 
-#' @title plot.hpd: Plot highest posterior density intervals (from BayesDiallel package, Will Valdar and Alan Lenarcic)
-#' @description Plot HPD intervals.
+#' @title plot.hpd: Plot highest posterior density intervals
+#' @description Plot HPD intervals. (From the BayesDiallel package, Will Valdar and Alan Lenarcic).
 #' @param coda.object coda object
 #' @param wanted variable names for coda object
 #' @param prob.wide outer width of posterior probability
@@ -52,7 +52,7 @@ incidence.matrix <- function(fact, ...){
 #' @return returns HPD plot
 #' @examples
 #' ## not run
-#' @export
+#' @export plot.hpd
 plot.hpd <- function(coda.object,
     wanted=varnames(coda.object),
     prob.wide=0.95,
@@ -88,6 +88,145 @@ plot.hpd <- function(coda.object,
   }
   invisible(ypos)
 }
+
+# Source: WVmisc package
+#' @export
+ifow <- function(test, yes, no)
+{
+  if (test)
+  {
+    return (yes)
+  }
+  no
+}
+
+# Source: WVgraphics package
+#' @export
+sides <- function(default=NA, bottom=default, left=default, top=default, right=default)
+{
+  x=c(bottom, left, top, right)
+  names(x)=c("bottom", "left", "top", "right")
+  x
+}
+
+# Source: WVgraphics package
+#' @export
+update.sides=function(old=par("mar"), new=rep(NA, 4))
+{
+  old[!is.na(new)]=new[!is.na(new)]
+  old
+}
+
+# Source: BayesDiallel package
+#' @export
+mcmc.stack <- function (coda.object, ...){
+  ## This function is from Will; also part of BayesDiallel
+    if (inherits(coda.object, "mcmc")) {
+        return(coda.object)
+    }
+    if (!inherits(coda.object, "mcmc.list")) {
+        stop("Non-mcmc object passed to function\n")
+    }
+    chain <- coda.object[[1]]
+    for (i in 2:nchain(coda.object)) {
+        chain <- rbind(chain, coda.object[[i]])
+    }
+    as.mcmc(chain)
+}
+
+# Source: BayesDiallel package
+#' @export
+plot.ci <- function(midvals, narrow.intervals, wide.intervals, 
+    names=1:length(midvals),
+    add=FALSE,
+    main="", main.line=2,
+    xlab="Estimate",
+    xlab.line=2.5,
+    xlim=NULL,
+    ylab="",
+    yaxis=TRUE,
+    ylim=c(0, length(midvals)),
+    name.line=4,
+    pch.midvals=19,
+    col="black",
+    col.midvals=col,
+    cex.labels=1,
+    type="p",
+    name.margin=6.1,
+    title.margin=4.1, title.line = 3.5, 
+    bottom.margin=5.1, bottom.line=4.5,
+    right.margin=2.1, right.line=1.5,
+    mar=sides(left=name.margin, bottom=bottom.margin, top=title.margin, right=right.margin),
+    mar.update=sides(),
+    before.data=function(){},
+    plt.left=NULL, plt.right=NULL, plt.bottom=NULL, plt.title=NULL,
+    ...)
+# Example: plot.ci( c(0,10), narrow.intervals=rbind(c(-1,1), c(8,12)), wide.intervals=rbind(c(-3,4), c(5,15)), names=c("Fred", "Barney"))
+{
+  nvals <- length(midvals)
+  col.midvals <- rep(col.midvals, length.out=nvals)
+  y.pos <- (1:nvals)-0.5
+  if (!add)
+  {
+    if (is.null(xlim))
+    {
+      xlim <- range(c(wide.intervals,narrow.intervals,midvals), na.rm=TRUE)
+      xlim <- c(-1,1) * diff(xlim)*0.1 + xlim
+    }
+  
+    if (name.margin == 6.1 && !is.null(plt.left)  && is.numeric(plt.left) &&
+      plt.left >= 0 && plt.left <= 1.0 ) {
+      name.margin=6.1 * plt.left / .2;  
+    }
+    if (right.margin == 2.1 && !is.null(plt.right)  && is.numeric(plt.right) &&
+      plt.right >= 0 && plt.right <= 1.0 ) {
+      right.margin=2.1 * (1.0-plt.right) / .05;  
+    }
+    if (title.margin == 4.1 && !is.null(plt.title)  && is.numeric(plt.title) &&
+      plt.title >= 0 && plt.title <= 1.0 ) {
+      title.margin=4.1* (1.0-plt.title) / .12;  
+    }
+    if (bottom.margin == 5.1 && !is.null(plt.bottom)  && is.numeric(plt.bottom) &&
+      plt.bottom >= 0 && plt.bottom <= 1.0 ) {
+      bottom.margin=5.1* plt.bottom / .16;  
+    }
+    mar <- c(bottom.margin, name.margin, title.margin, right.margin)+0.1
+    mar=update.sides(mar, mar.update)
+    oldmar <- par(mar=mar); on.exit(par(mar=oldmar))
+    
+    MyD = FALSE;
+    AT = "plot(x = xlim, y=ylim, type=\"n\", axes=FALSE, ylab=ylab, xlim=xlim, ylim=ylim, xlab=\"\", main=\"\", 
+       ...); MyD = TRUE";
+    try(eval(parse(text=AT)), silent=TRUE);
+    if (MyD == FALSE) {
+      try(plot(x=xlim, y=ylim, type="n", axes=FALSE,ylab=ylab, ylim=ylim, xlim=xlim, xlab="", main="", ));
+    }
+    
+    if (!is.null(main) && is.character(main) && main[1] != "") {
+      try(title(main=main, line=main.line, cex.main = 1.5));
+    }
+    title(xlab=xlab, line=xlab.line)
+    axis(1)
+    axis(3, line=-.8)
+    if (yaxis)
+    { 
+      axis(2, at=y.pos, labels=rev(names), las=1, lty=0, hadj=0, line=name.line, cex.axis=cex.labels)
+    }
+  }
+  before.data()
+  if ("p"==type)
+  {
+    for (i in 1:nvals)
+    {
+      pos <- nvals-i + 0.5
+      lines(wide.intervals[i,], rep(pos,2))
+      lines(narrow.intervals[i,], rep(pos,2), lwd=3)
+      points(midvals[i], pos, pch=pch.midvals, col=col.midvals[i])
+    }
+  }
+  invisible(rev(y.pos))
+}
+
 
 #' @title makeRotationMatrix: Make a rotation matrix
 #' @description Turn an n-column design matrix into an n-1, sum to 0, design matrix

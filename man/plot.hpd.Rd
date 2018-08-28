@@ -2,7 +2,7 @@
 % Please edit documentation in R/litterDiallel.R
 \name{plot.hpd}
 \alias{plot.hpd}
-\title{plot.hpd: Plot highest posterior density intervals (from BayesDiallel package, Will Valdar and Alan Lenarcic)}
+\title{plot.hpd: Plot highest posterior density intervals}
 \usage{
 \method{plot}{hpd}(coda.object, wanted = varnames(coda.object),
   prob.wide = 0.95, prob.narrow = 0.5, xlab = "HPD interval",
@@ -49,7 +49,7 @@
 returns HPD plot
 }
 \description{
-Plot HPD intervals.
+Plot HPD intervals. (From the BayesDiallel package, Will Valdar and Alan Lenarcic).
 }
 \examples{
 ## not run

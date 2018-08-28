@@ -7,7 +7,7 @@ author:
   - The University of North Carolina at Chapel Hill, Department of Genetics, Chapel Hill, NC, USA (previous)
 
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::html_document
 vignette: >
   %\VignetteIndexEntry{Analyzing the litter diallel}
   %\VignetteEngine{knitr::rmarkdown}
@@ -41,9 +41,531 @@ litters$inbred <- ifelse(litters$Dam_Founder == litters$Sire_Founder, 1, 0)
 ## Generate design matrices
 
 ```{r, message=FALSE}
-matrices <- diallelMatrixMaker(data=litters, dam.col.name="Dam_Founder",
-                               sire.col.name="Sire_Founder", batch.col.name="YearMonth",
-                               batch.1.col.name="litterorder")
-M.matrices <- matrices[[1]]
-t.matrices <- matrices[[2]]
+matrices <- diallelMatrixMaker(data=litters, dam.col.name="Dam_Founder", sire.col.name="Sire_Founder", 
+                               batch.col.name="YearMonth", batch.1.col.name="litterorder")
+M.matrices <- diallelMatrixMakeAndRotate(litters, dam.col.name="Dam_Founder", 
+  sire.col.name="Sire_Founder", batch.col.name="YearMonth",
+  batch.1.col.name="litterorder")[[1]]
+t.matrices <- diallelMatrixMakeAndRotate(litters, dam.col.name="Dam_Founder", 
+  sire.col.name="Sire_Founder", batch.col.name="YearMonth",
+  batch.1.col.name="litterorder")[[2]]
 ```
+
+## Define design matrices for each random effects class
+
+```{r, message=FALSE}
+add.mat <- matrices$add.mat
+mat.mat <- matrices$mat.mat
+dam.mat <- matrices$dam.mat
+sire.mat <- matrices$sire.mat
+inbred.mat <- matrices$inbred.mat
+jk.mat <- matrices$jk.mat
+asymm.mat <- matrices$asymm.mat
+batch.mat <- matrices$batch.mat
+batch.1.mat <- matrices$batch.1.mat
+```
+
+## Define reduced-dimension design matrices to pre-center variable estimates in each class
+### See: Lenarcic et al., 2012, *Genetics*; and Crowley et al., 2014, *Genetics*
+
+```{r, message=FALSE}
+t.add.mat <- t.matrices$t.add.mat
+t.mat.mat <- t.matrices$t.mat.mat
+t.dam.mat <- t.matrices$t.dam.mat
+t.sire.mat <- t.matrices$t.sire.mat
+t.inbred.mat <- t.matrices$t.inbred.mat
+t.jk.mat <- t.matrices$t.jk.mat
+t.asymm.mat <- t.matrices$t.asymm.mat
+t.batch.mat <- t.matrices$t.batch.mat
+t.batch.1.mat <- t.matrices$t.batch.1.mat
+```
+
+## Model the data as approximately Gaussian, after using a variance-stabilizing transform.
+
+```{r, message=FALSE}
+nitt <- 1515
+burnin <- 15
+thin <- 1
+# nitt <- 15150
+# burnin <- 150
+# thin <- 5
+dist <- "gaussian"
+ordernum <- 0
+adjust <- 0
+litters$SqrtWeaned <- sqrt(litters$Weaned)
+```
+
+## Define priors
+
+```{r, message=FALSE}
+priors <- list(B=list(V=1e+03*diag(3), mu=c(0,0,0)),
+              R = list(V = diag(1), nu = 0.002),
+              G = list(
+                  G1=list(V=1, nu=0.002), 
+                  G2=list(V=1, nu=0.002), 
+                  G3=list(V=1, nu=0.002), 
+                  G4=list(V=1, nu=0.002), 
+                  G5=list(V=1, nu=0.002), 
+                  G6=list(V=1, nu=0.002),
+                  G7=list(V=1, nu=0.002)))
+```
+
+## Fit the model
+
+```{r, message=FALSE}
+fit1 <- MCMCglmm(SqrtWeaned ~ 1 + inbred + litternum,
+                 random = ~ idv(t.add.mat) + idv(t.mat.mat) + idv(t.inbred.mat) +
+                   idv(t.jk.mat) + idv(t.asymm.mat) +
+                   idv(t.batch.mat) + idv(t.batch.1.mat),
+                 prior=priors,
+                 nitt=nitt, burnin = burnin,
+                 thin=thin, pr=TRUE,
+                 family = "gaussian", data=litters)
+```
+
+## Retrieve MCMC chains
+
+```{r, message=FALSE}
+allChains <- as.mcmc(cbind(fit1$Sol,fit1$VCV))
+allChains.fixed <- allChains[,c("(Intercept)", "inbred", "litternum")]
+colnames(allChains.fixed) <- c("mu", "inbred", "litternum")
+allChains.add <- allChains[, grep(colnames(allChains), pattern="^t.add.mat[^.]", value=TRUE)]
+allChains.mat <- allChains[, grep(colnames(allChains), pattern="^t.mat.mat[^.]", value=TRUE)]
+allChains.inbred <- allChains[, grep(colnames(allChains), pattern="^t.inbred.mat[^.]", value=TRUE)]
+allChains.jk <- allChains[, grep(colnames(allChains), pattern="^t.jk.mat[^.]", value=TRUE)]
+allChains.asymm <- allChains[, grep(colnames(allChains), pattern="^t.asymm.mat[^.]", value=TRUE)]
+allChains.batch <- allChains[, grep(colnames(allChains), pattern="^t.batch.mat[^.]", value=TRUE)]
+allChains.batch.1 <- allChains[, grep(colnames(allChains), pattern="^t.batch.1.mat[^.]", value=TRUE)]
+allChains.sigma <- allChains[, c('t.add.mat.', 't.mat.mat.', 't.inbred.mat.', 
+                                 't.jk.mat.', 't.asymm.mat.', 
+                                 't.batch.mat.', 't.batch.1.mat.', 'units')]
+```
+
+## Rotate data back to full parameter space
+
+```{r, message=FALSE}
+M.add <- M.matrices$M.add
+M.mat <- M.matrices$M.mat
+M.inbred <- M.matrices$M.inbred
+M.jk <- M.matrices$M.jk
+M.asymm <- M.matrices$M.asymm
+M.batch <- M.matrices$M.batch
+M.batch.1 <- M.matrices$M.batch.1
+
+allChains.add <- allChains.add %*% t(M.add)
+allChains.mat <- allChains.mat %*% t(M.mat)
+allChains.inbred <- allChains.inbred %*% t(M.inbred)
+allChains.jk <- allChains.jk %*% t(M.jk)
+allChains.asymm <- allChains.asymm %*% t(M.asymm)
+allChains.batch <- allChains.batch %*% t(M.batch)
+allChains.batch.1 <- allChains.batch.1 %*% t(M.batch.1)
+
+colnames(allChains.add) <- colnames(add.mat)
+colnames(allChains.mat) <- colnames(mat.mat)
+colnames(allChains.inbred) <- colnames(inbred.mat)
+colnames(allChains.jk) <- colnames(jk.mat)
+colnames(allChains.asymm) <- colnames(asymm.mat)
+colnames(allChains.batch) <- colnames(batch.mat)
+colnames(allChains.batch.1) <- colnames(batch.1.mat)
+
+colnames(allChains.sigma) <- c("tau-sq-add",
+                               "tau-sq-maternal",
+                               "tau-sq-inbred",
+                               "tau-sq-jk",
+                               "tau-sq-asymm",
+                               "tau-sq-year-month",
+                               "tau-sq-litterorder",
+                               "sigma-sq")
+
+allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, 
+                   allChains.mat, allChains.inbred,
+                   allChains.jk, allChains.asymm,
+                   allChains.batch, allChains.batch.1,
+                   allChains.sigma))
+```
+
+## Plot MCMC traces
+
+```{r, message=FALSE}
+#plot(allChains[,1])
+```
+
+## Plot diallel effect estimates
+
+```{r, message=FALSE, fig_width=3, fig_height=8}
+jk.ordering <- c('v:B6;AJ', 'v:129;AJ', 'v:NOD;AJ', 'v:NZO;AJ', 'v:CAST;AJ', 'v:PWK;AJ', 'v:WSB;AJ',
+                 'v:129;B6', 'v:NOD;B6', 'v:NZO;B6', 'v:CAST;B6', 'v:PWK;B6', 'v:WSB;B6',
+                 'v:NOD;129', 'v:NZO;129', 'v:CAST;129', 'v:PWK;129', 'v:WSB;129',
+                 'v:NZO;NOD', 'v:CAST;NOD', 'v:PWK;NOD', 'v:WSB;NOD',
+                 'v:CAST;NZO', 'v:PWK;NZO', 'v:WSB;NZO', 'v:PWK;CAST', 'v:WSB;CAST', 'v:WSB;PWK')
+
+asymm.ordering <- c('w:B6;AJ', 'w:129;AJ', 'w:NOD;AJ', 'w:NZO;AJ', 'w:CAST;AJ', 'w:PWK;AJ', 'w:WSB;AJ',
+                 'w:129;B6', 'w:NOD;B6', 'w:NZO;B6', 'w:CAST;B6', 'w:PWK;B6', 'w:WSB;B6',
+                 'w:NOD;129', 'w:NZO;129', 'w:CAST;129', 'w:PWK;129', 'w:WSB;129',
+                 'w:NZO;NOD', 'w:CAST;NOD', 'w:PWK;NOD', 'w:WSB;NOD',
+                 'w:CAST;NZO', 'w:PWK;NZO', 'w:WSB;NZO', 'w:PWK;CAST', 'w:WSB;CAST', 'w:WSB;PWK')
+
+varcolors <- c("#A6CEE3", "#B2DF8A", "#FB9A99",
+               "#FDBF6F", "#CAB2D6", "#D2B48C")
+varcolors.y0 <- rev(c(0.25, 8.25, 9.25, 17.25))
+varcolors.y1 <- rev(c(7.75, 8.75, 16.75, 24.75))
+xlim=c(-0.3, 0.3);
+
+var.labels.all <- varnames(allChains)
+var.labels <- c(colnames(add.mat), colnames(mat.mat), "inbred", colnames(inbred.mat))
+plot.hpd(allChains[,var.labels], main="general effects", xlim=xlim); abline(v=0, col="grey")
+segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=varcolors.y0, y1=varcolors.y1, col=varcolors[1:4], lwd=7, lend=1)
+
+var.labels <- jk.ordering
+plot.hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
+segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=0.25, y1=27.75, col=varcolors[5], lwd=7, lend=1)
+
+var.labels <- asymm.ordering
+plot.hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
+segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=0.25, y1=27.75, col=varcolors[6], lwd=7, lend=1)
+
+```
+
+## Plot covariate effect estimates
+
+```{r, message=FALSE, fig_width=3, fig_height=8}
+var.labels.all <- varnames(allChains)
+var.labels <- c(colnames(batch.mat))[1:24]
+plot.hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+var.labels <- c(colnames(batch.mat))[25:48]
+plot.hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+var.labels <- c("litternum", colnames(batch.1.mat))
+plot.hpd(allChains[,var.labels], main="litter order", xlim=xlim); abline(v=0, col="grey")
+```
+
+## Print tables
+
+```{r, results="asis"}
+#hpd.table1 <- summary(allChains)[[1]]
+hpd.table2 <- summary(allChains)[[2]]
+#print(xtable(hpd.table1), type="html")
+print(xtable(hpd.table2, digits=4), type="html")
+```
+
+## Calculate dam\_strain and sire\_strain effects
+
+```{r, message=FALSE}
+allChains.df <- as.data.frame(as.matrix(allChains))
+allChains.df$`dam:AJ` <- allChains.df[,"additive:AJ"] + allChains.df[, "maternal:AJ"]
+allChains.df$`dam:B6` <- allChains.df[,"additive:B6"] + allChains.df[, "maternal:B6"]
+allChains.df$`dam:129` <- allChains.df[,"additive:129"] + allChains.df[, "maternal:129"]
+allChains.df$`dam:NOD` <- allChains.df[,"additive:NOD"] + allChains.df[, "maternal:NOD"]
+allChains.df$`dam:NZO` <- allChains.df[,"additive:NZO"] + allChains.df[, "maternal:NZO"]
+allChains.df$`dam:CAST` <- allChains.df[,"additive:CAST"] + allChains.df[, "maternal:CAST"]
+allChains.df$`dam:PWK` <- allChains.df[,"additive:PWK"] + allChains.df[, "maternal:PWK"]
+allChains.df$`dam:WSB` <- allChains.df[,"additive:WSB"] + allChains.df[, "maternal:WSB"]
+
+allChains.df$`sire:AJ` <- allChains.df[,"additive:AJ"] - allChains.df[, "maternal:AJ"]
+allChains.df$`sire:B6` <- allChains.df[,"additive:B6"] - allChains.df[, "maternal:B6"]
+allChains.df$`sire:129` <- allChains.df[,"additive:129"] - allChains.df[, "maternal:129"]
+allChains.df$`sire:NOD` <- allChains.df[,"additive:NOD"] - allChains.df[, "maternal:NOD"]
+allChains.df$`sire:NZO` <- allChains.df[,"additive:NZO"] - allChains.df[, "maternal:NZO"]
+allChains.df$`sire:CAST` <- allChains.df[,"additive:CAST"] - allChains.df[, "maternal:CAST"]
+allChains.df$`sire:PWK` <- allChains.df[,"additive:PWK"] - allChains.df[, "maternal:PWK"]
+allChains.df$`sire:WSB` <- allChains.df[,"additive:WSB"] - allChains.df[, "maternal:WSB"]
+
+allChains.dam <- allChains.df[, grep(names(allChains.df), pattern="^dam:", value=TRUE)]
+allChains.sire <- allChains.df[, grep(names(allChains.df), pattern="^sire:", value=TRUE)]
+
+allChains.bup <- allChains
+allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, allChains.mat, 
+                           allChains.dam, allChains.sire, allChains.inbred,
+                           allChains.jk, allChains.asymm,
+                           allChains.batch, allChains.batch.1,
+                           allChains.sigma))
+```
+
+## Plot MCMC traces
+
+```{r, messages=FALSE}
+#plot(allChains[,colnames(dam.mat)]); plot(allChains[,colnames(sire.mat)])
+```
+
+## Plot dam\_strain and sire\_strain effects
+```{r, messages=FALSE}
+xlim=c(-0.4, 0.4);
+var.labels.all <- varnames(allChains)
+var.labels.new <- c("dam:AJ", "dam:B6", "dam:129", "dam:NOD", "dam:NZO", "dam:CAST", "dam:PWK", "dam:WSB",
+                "sire:AJ", "sire:B6", "sire:129", "sire:NOD", "sire:NZO", "sire:CAST", "sire:PWK", "sire:WSB")
+var.labels <- c(colnames(dam.mat), colnames(sire.mat))#, "inbred", colnames(inbred.mat))
+plot.hpd(allChains[,var.labels[1:8]], xlim=xlim, main="dam strain", main.line=1.75); abline(v=0, col="grey")
+plot.hpd(allChains[,var.labels[9:16]], xlim=xlim, main="sire strain", main.line=1.75); abline(v=0, col="grey")
+```
+
+## Plot VarComps
+
+```{r, messages=FALSE}
+allChains.sigma.names <- c("tau-sq-add",
+                           "tau-sq-maternal",
+                           "tau-sq-inbred",
+                           "tau-sq-jk",
+                           "tau-sq-asymm",
+                           "sigma-sq")
+allChains.sigma <- allChains[,allChains.sigma.names]
+
+var.df <- cbind(as.data.frame(allChains[, allChains.sigma.names]), adjust)
+names(var.df)[names(var.df)=="var1"] <- "adjust"
+var.df$total <- var.df$`tau-sq-add` + var.df$`tau-sq-maternal` + var.df$`tau-sq-inbred` +
+                var.df$`tau-sq-jk` + var.df$`tau-sq-asymm` + 
+                var.df$`sigma-sq` + var.df$`adjust`
+varcomp <- NULL
+varcomp$additive <- var.df$`tau-sq-add` / var.df$`total`
+varcomp$parental.sex <- var.df$`tau-sq-maternal` / var.df$`total`
+varcomp$inbred <- var.df$`tau-sq-inbred` / var.df$`total`
+varcomp$symmetric.epistatic <- var.df$`tau-sq-jk` / var.df$`total`
+varcomp$asymmetric.epistatic <- var.df$`tau-sq-asymm` / var.df$`total`
+
+varcomp$total.explained <- (var.df$`total` - var.df$`sigma-sq` - var.df$`adjust`)/ var.df$`total`
+varcomp$noise <- (var.df$`sigma-sq` + var.df$`adjust`)/var.df$`total`
+varcomp <- as.data.frame(varcomp)
+
+varcomp.table <- cbind(mean=colMeans(varcomp), 
+	lower.bound=HPDinterval(as.mcmc(varcomp))[,1],
+	upper.bound=HPDinterval(as.mcmc(varcomp))[,2])
+
+varcolors <- c("#A6CEE3", "#B2DF8A", #"#FB9A99",
+               "#FDBF6F", "#CAB2D6", "#D2B48C")
+varcolors.y0 <- c(7.5, 6.5, 5.5, 4.5, 3.5)
+varcolors.y1 <- c(6.5, 5.5, 4.5, 3.5, 2.5)
+psq <- data.frame(varcomp.table)
+
+par(mar = c(5.1, 13.5, 2.1, 12.1))
+rows <- nrow(psq)
+plot(y = c(0.5, rows + 0.5), x = c(-0.06, 1.01), yaxs = "i",
+    xaxs = "i", col = "white", ylab = "", xlab = "variance explained",
+    yaxt = "n")
+segments(x0=-0.05, x1=-0.05, y0=varcolors.y0, y1=varcolors.y1, col=varcolors, lwd=15, lend=1)
+abline(v = c(0, 0.2, 0.4, 0.6, 0.8, 1), lty = 2, col = "grey")
+abline(h = 2.5, lwd = 1.5)
+segments(x0 = psq$lower.bound, x1 = psq$upper.bound, y0 = c(rows:1),
+    y1 = c(rows:1), lwd = 4, lend=1)
+axis(side = 2, at = c(rows:1), labels = rownames(psq),
+    las = 1)
+rightlabels <- paste(as.character(sprintf("%.2f", round(100 *
+    psq$mean, digits = 2))), "% (", as.character(sprintf("%.2f",
+    round(100 * psq$lower.bound, digits = 2))), "%, ", as.character(sprintf("%.2f",
+    round(100 * psq$upper.bound, digits = 2))), "%)", sep = "")
+axis(side = 4, at = c(rows:1), labels = rightlabels, tick = FALSE,
+    las = 1)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "black",
+    cex = 1.5)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
+    cex = 0.5)
+```
+
+## Table of results
+
+```{r, results="asis"}
+print(xtable(psq, digits=4), type="html")
+```
+
+## Plot VarPs
+
+```{r, messages=FALSE}
+allChains.df <- data.frame(allChains, check.names=FALSE)
+
+allChains.df$`dam:AJ` <- allChains.df[,"additive:AJ"] + allChains.df[, "maternal:AJ"]
+allChains.df$`dam:B6` <- allChains.df[,"additive:B6"] + allChains.df[, "maternal:B6"]
+allChains.df$`dam:129` <- allChains.df[,"additive:129"] + allChains.df[, "maternal:129"]
+allChains.df$`dam:NOD` <- allChains.df[,"additive:NOD"] + allChains.df[, "maternal:NOD"]
+allChains.df$`dam:NZO` <- allChains.df[,"additive:NZO"] + allChains.df[, "maternal:NZO"]
+allChains.df$`dam:CAST` <- allChains.df[,"additive:CAST"] + allChains.df[, "maternal:CAST"]
+allChains.df$`dam:PWK` <- allChains.df[,"additive:PWK"] + allChains.df[, "maternal:PWK"]
+allChains.df$`dam:WSB` <- allChains.df[,"additive:WSB"] + allChains.df[, "maternal:WSB"]
+
+allChains.df$`sire:AJ` <- allChains.df[,"additive:AJ"] - allChains.df[, "maternal:AJ"]
+allChains.df$`sire:B6` <- allChains.df[,"additive:B6"] - allChains.df[, "maternal:B6"]
+allChains.df$`sire:129` <- allChains.df[,"additive:129"] - allChains.df[, "maternal:129"]
+allChains.df$`sire:NOD` <- allChains.df[,"additive:NOD"] - allChains.df[, "maternal:NOD"]
+allChains.df$`sire:NZO` <- allChains.df[,"additive:NZO"] - allChains.df[, "maternal:NZO"]
+allChains.df$`sire:CAST` <- allChains.df[,"additive:CAST"] - allChains.df[, "maternal:CAST"]
+allChains.df$`sire:PWK` <- allChains.df[,"additive:PWK"] - allChains.df[, "maternal:PWK"]
+allChains.df$`sire:WSB` <- allChains.df[,"additive:WSB"] - allChains.df[, "maternal:WSB"]
+
+allChains.dam <- allChains.df[, grep(names(allChains.df), pattern="^dam:", value=TRUE)]
+allChains.sire <- allChains.df[, grep(names(allChains.df), pattern="^sire:", value=TRUE)]
+
+allChains.fixed <- allChains.df[,c("mu", "inbred", "litternum")]
+allChains.add <- as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^additive[^.]", value=TRUE)])
+allChains.mat <-  as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^maternal[^.]", value=TRUE)])
+allChains.dam <-  as.matrix( allChains.df[, grep(colnames(allChains.df), pattern="^dam[^.]", value=TRUE)])
+allChains.sire <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^sire[^.]", value=TRUE)])
+allChains.inbred <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^inbred[^.]", value=TRUE)])
+allChains.jk <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^v[^.]", value=TRUE)])
+allChains.asymm <-  as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^w[^.]", value=TRUE)])
+allChains.batch <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^YearMonth[^.]", value=TRUE)])
+allChains.batch.1 <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^order[^.]", value=TRUE)])
+allChains.sigma <-   as.matrix(cbind(allChains.df[, grep(colnames(allChains.df), pattern="^tau-sq-[^.]", value=TRUE)],
+                      `sigma-sq`=allChains.df$`sigma-sq`))
+
+allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, allChains.mat, 
+                           allChains.dam, allChains.sire, allChains.inbred,
+                           allChains.jk, allChains.asymm,
+                           allChains.batch, allChains.batch.1,
+                           allChains.sigma))
+
+founder.names <- c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB")
+projection <- as.data.frame(as.matrix(expand.grid(founder.names, founder.names)[,c(2,1)]))
+
+projection$inbred <- ifelse(projection[,1]==projection[,2], 1, 0)
+projection.inbred.mat <- diag(projection$inbred)
+colnames(projection) <- c("Dam_Founder", "Sire_Founder", "inbred")
+projection.matrices <- diallelMatrixMaker(projection, dam.col.name="Dam_Founder", sire.col.name="Sire_Founder")
+
+proj.add <- apply(allChains.add, MARGIN=1, FUN=function(x){projection.matrices$add.mat %*% x})
+proj.mat <- apply(allChains.mat, MARGIN=1, FUN=function(x){projection.matrices$mat.mat %*% x})
+proj.dam <- apply(allChains.dam, MARGIN=1, FUN=function(x){projection.matrices$dam.mat %*% x})
+proj.sire <- apply(allChains.sire, MARGIN=1, FUN=function(x){projection.matrices$sire.mat %*% x})
+proj.inbred <- apply(allChains.inbred, MARGIN=1, FUN=function(x){projection.matrices$inbred.mat %*% x})
+proj.jk <- apply(allChains.jk, MARGIN=1, FUN=function(x){projection.matrices$jk.mat %*% x})
+proj.asymm <- apply(allChains.asymm, MARGIN=1, FUN=function(x){projection.matrices$asymm.mat %*% x})
+proj.mu <- matrix(rep(allChains.fixed[,"mu"],each=dim(projection)[1]),nrow=dim(projection)[1])
+proj.inbred.overall <- projection.inbred.mat %*% matrix(rep(allChains.fixed[,"inbred"],each=dim(projection)[1]), nrow=dim(projection)[1])
+
+proj.epsilon <- sapply(allChains.sigma[,"sigma-sq"], FUN=function(x){rnorm(n=dim(projection)[1], mean=0, sd=sqrt(x))})
+proj.determ.mu <- proj.mu + proj.inbred.overall + proj.add + proj.mat + proj.inbred + proj.jk + proj.asymm
+proj.determ <- proj.add + proj.mat + proj.inbred + proj.jk + proj.asymm
+# The following projections should be equivalent:
+# proj.determ.mu <- proj.mu + proj.inbred.overall + proj.dam + proj.sire + proj.inbred + proj.jk + proj.asymm
+# proj.determ <- proj.dam + proj.sire + proj.inbred + proj.jk + proj.asymm
+proj.not.add <- proj.determ - proj.add
+proj.not.mat <- proj.determ - proj.mat
+proj.not.dam <- proj.determ - proj.dam
+proj.not.sire <- proj.determ - proj.sire
+proj.not.inbred <- proj.determ - proj.inbred
+proj.not.inbred.overall <- proj.determ - proj.inbred.overall
+proj.not.jk <- proj.determ - proj.jk
+proj.not.asymm <- proj.determ - proj.asymm
+proj.total <- proj.determ + proj.epsilon
+proj.y <- proj.determ.mu + proj.epsilon
+
+
+ss.add <- NULL
+ss.mat <- NULL
+ss.dam <- NULL
+ss.sire <- NULL
+ss.inbred <- NULL
+ss.inbred.overall <- NULL
+ss.jk <- NULL
+ss.asymm <- NULL
+ss.epsilon <- NULL
+ss.denom <- NULL
+
+for(i in 1:dim(proj.add)[2]){
+  ss.add[i] <- sum((proj.determ[,i] - proj.not.add[,i])^2)
+  ss.mat[i] <- sum((proj.determ[,i] - proj.not.mat[,i])^2)
+  ss.dam[i] <- sum((proj.determ[,i] - proj.not.dam[,i])^2)
+  ss.sire[i] <- sum((proj.determ[,i] - proj.not.sire[,i])^2)
+  ss.inbred[i] <- sum((proj.determ[,i] - proj.not.inbred[,i])^2)
+  ss.inbred.overall[i] <- sum((proj.determ[,i] - proj.not.inbred.overall[,i])^2)
+  ss.jk[i] <- sum((proj.determ[,i] - proj.not.jk[,i])^2)
+  ss.asymm[i] <- sum((proj.determ[,i] - proj.not.asymm[,i])^2)
+  ss.epsilon[i] <- sum((proj.y[,i] - proj.determ.mu[,i])^2)
+}
+
+Y.bar <- matrix(rep(apply(proj.determ, MARGIN=2, FUN=sum)/dim(projection)[1], each=dim(projection)[1]), nrow=dim(projection)[1])
+ss.denom <- ss.add + ss.mat + ss.inbred + ss.inbred.overall + ss.jk + ss.asymm + ss.epsilon + adjust
+
+additive <- ss.add/ss.denom
+mat.dev <- ss.mat/ss.denom
+maternal <- ss.dam/ss.denom
+paternal <- ss.sire/ss.denom
+inbred <- ss.inbred/ss.denom
+inbred.overall <- ss.inbred.overall/ss.denom
+epistatic.symm <- ss.jk/ss.denom
+epistatic.asymm <- ss.asymm/ss.denom
+explained <- (ss.add + ss.mat + ss.inbred + ss.jk + ss.asymm)/ss.denom
+unexplained <- 1 - explained
+
+varps.all <- cbind(additive, parental.sex=mat.dev, inbred, inbred.overall, symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
+varps.all.table <- cbind(mean=colMeans(varps.all), 
+	lower.bound=HPDinterval(as.mcmc(varps.all))[,1],
+	upper.bound=HPDinterval(as.mcmc(varps.all))[,2])
+
+varcolors <- c("#A6CEE3", "#B2DF8A", "#FB9A99",
+               "#FDBF6F", "#CAB2D6", "#D2B48C")
+varcolors.y0 <- c(8.5, 7.5, 6.5, 5.5, 4.5, 3.5)
+varcolors.y1 <- c(7.5, 6.5, 5.5, 4.5, 3.5, 2.5)
+psq <- data.frame(varps.all.table)
+
+par(mar = c(5.1, 13.5, 2.1, 12.1))
+rows <- nrow(psq)
+plot(y = c(0.5, rows + 0.5), x = c(-0.06, 1.01), yaxs = "i",
+    xaxs = "i", col = "white", ylab = "", xlab = "Variance Projection",
+    yaxt = "n")
+segments(x0=-0.05, x1=-0.05, y0=varcolors.y0, y1=varcolors.y1, col=varcolors, lwd=15, lend=1)
+abline(v = c(0, 0.2, 0.4, 0.6, 0.8, 1), lty = 2, col = "grey")
+abline(h = 2.5, lwd = 1.5)
+segments(x0 = psq$lower.bound, x1 = psq$upper.bound, y0 = c(rows:1),
+    y1 = c(rows:1), lwd = 4, lend=1)
+axis(side = 2, at = c(rows:1), labels = rownames(psq),
+    las = 1)
+rightlabels <- paste(as.character(sprintf("%.2f", round(100 *
+    psq$mean, digits = 2))), "% (", as.character(sprintf("%.2f",
+    round(100 * psq$lower.bound, digits = 2))), "%, ", as.character(sprintf("%.2f",
+    round(100 * psq$upper.bound, digits = 2))), "%)", sep = "")
+axis(side = 4, at = c(rows:1), labels = rightlabels, tick = FALSE,
+    las = 1)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "black",
+    cex = 1.5)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
+    cex = 0.5)
+```
+
+## Table of results
+
+```{r, results="asis"}
+print(xtable(psq, digits=4), type="html")
+```
+
+## Plot dam\_strain and sire\_strain VarPs
+
+```{r, messages=FALSE}
+varps.all.damsire <- cbind(dam.strain=maternal, sire.strain=paternal, inbred, inbred.overall, symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
+
+varps.all.damsire.table <- cbind(mean=colMeans(varps.all.damsire), 
+  lower.bound=HPDinterval(as.mcmc(varps.all.damsire))[,1],
+  upper.bound=HPDinterval(as.mcmc(varps.all.damsire))[,2])
+
+## MCMCglmm model variance component estimates
+varcolors <- c("#781112", "#131E3A", "#FB9A99",
+               "#FDBF6F", "#CAB2D6", "#D2B48C")
+varcolors.y0 <- c(8.5, 7.5, 6.5, 5.5, 4.5, 3.5)
+varcolors.y1 <- c(7.5, 6.5, 5.5, 4.5, 3.5, 2.5)
+psq <- data.frame(varps.all.damsire.table)
+
+par(mar = c(5.1, 13.5, 2.1, 12.1))
+rows <- nrow(psq)
+plot(y = c(0.5, rows + 0.5), x = c(-0.06, 1.01), yaxs = "i",
+    xaxs = "i", col = "white", ylab = "", xlab = "Variance Projection",
+    yaxt = "n")
+segments(x0=-0.05, x1=-0.05, y0=varcolors.y0, y1=varcolors.y1, col=varcolors, lwd=15, lend=1)
+abline(v = c(0, 0.2, 0.4, 0.6, 0.8, 1), lty = 2, col = "grey")
+abline(h = 2.5, lwd = 1.5)
+segments(x0 = psq$lower.bound, x1 = psq$upper.bound, y0 = c(rows:1),
+    y1 = c(rows:1), lwd = 4, lend=1)
+axis(side = 2, at = c(rows:1), labels = rownames(psq),
+    las = 1)
+rightlabels <- paste(as.character(sprintf("%.2f", round(100 *
+    psq$mean, digits = 2))), "% (", as.character(sprintf("%.2f",
+    round(100 * psq$lower.bound, digits = 2))), "%, ", as.character(sprintf("%.2f",
+    round(100 * psq$upper.bound, digits = 2))), "%)", sep = "")
+axis(side = 4, at = c(rows:1), labels = rightlabels, tick = FALSE,
+    las = 1)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "black",
+    cex = 1.5)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
+    cex = 0.5)
+```
+
+## Table of results
+
+```{r, results="asis"}
+print(xtable(psq, digits=4), type="html")
+```
+

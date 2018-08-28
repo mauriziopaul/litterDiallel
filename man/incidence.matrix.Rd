@@ -2,7 +2,7 @@
 % Please edit documentation in R/litterDiallel.R
 \name{incidence.matrix}
 \alias{incidence.matrix}
-\title{incidence.matrix: Make an incidence matrix (from WVmisc package, Will Valdar)}
+\title{incidence.matrix: Make an incidence matrix}
 \usage{
 incidence.matrix(fact, ...)
 }
@@ -15,7 +15,7 @@ incidence.matrix(fact, ...)
 generates an incidence matrix
 }
 \description{
-Convert a factor into an incidence matrix
+Convert a factor into an incidence matrix. (From the WVmisc package, Will Valdar).
 }
 \examples{
 ## not run
