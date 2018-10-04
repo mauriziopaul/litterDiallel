@@ -4,9 +4,9 @@
 \alias{diallelMatrixMaker}
 \title{diallelMatrixMaker}
 \usage{
-diallelMatrixMaker(data, dam.col.name, sire.col.name, batch.col.name = NULL,
-  batch.1.col.name = NULL, strains = c("AJ", "B6", "129", "NOD", "NZO",
-  "CAST", "PWK", "WSB"), ...)
+diallelMatrixMaker(data, dam.col.name, sire.col.name,
+  batch.col.name = NULL, batch.1.col.name = NULL, strains = c("AJ",
+  "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...)
 }
 \arguments{
 \item{data}{data frame}
