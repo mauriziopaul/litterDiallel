@@ -17,7 +17,7 @@ You can install `litterDiallel` using the following steps. First, please make su
 2. Install `litterDiallel` (with the vignette, _recommended_):
 
     ```R
-    devtools::install_github("mauriziopaul/litterDiallel", build_vignettes=TRUE, build=TRUE, build = TRUE, build_opts = c("--no-resave-data", "--no-manual"))
+    devtools::install_github("mauriziopaul/litterDiallel", build_vignettes=TRUE, build = TRUE, build_opts = c("--no-resave-data", "--no-manual"))
     ```
     
     or
