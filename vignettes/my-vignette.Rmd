@@ -171,7 +171,7 @@ colnames(allChains.batch.1) <- colnames(batch.1.mat)
 
 ## Edit parameter class names, combine chains
 
-```
+```{r, message=FALSE}
 colnames(allChains.sigma) <- c("tau-sq-add",
                                "tau-sq-maternal",
                                "tau-sq-inbred",
