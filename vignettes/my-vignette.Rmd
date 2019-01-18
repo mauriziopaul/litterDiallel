@@ -80,7 +80,7 @@ t.batch.mat <- t.matrices$t.batch.mat
 t.batch.1.mat <- t.matrices$t.batch.1.mat
 ```
 
-## Model the data as approximately Gaussian, after using a variance-stabilizing transform.
+## Define parameters to model the data as approximately Gaussian, after using a variance-stabilizing transform.
 
 ```{r, message=FALSE}
 nitt <- 1515
@@ -141,7 +141,7 @@ allChains.sigma <- allChains[, c('t.add.mat.', 't.mat.mat.', 't.inbred.mat.',
                                  't.batch.mat.', 't.batch.1.mat.', 'units')]
 ```
 
-## Rotate data back to full parameter space
+## Rotate parameter estimates back to full parameter space
 
 ```{r, message=FALSE}
 M.add <- M.matrices$M.add
@@ -167,7 +167,11 @@ colnames(allChains.jk) <- colnames(jk.mat)
 colnames(allChains.asymm) <- colnames(asymm.mat)
 colnames(allChains.batch) <- colnames(batch.mat)
 colnames(allChains.batch.1) <- colnames(batch.1.mat)
+```
 
+## Edit parameter class names, combine chains
+
+```
 colnames(allChains.sigma) <- c("tau-sq-add",
                                "tau-sq-maternal",
                                "tau-sq-inbred",
@@ -280,7 +284,7 @@ allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, allChains.mat,
                            allChains.sigma))
 ```
 
-## Plot MCMC traces
+## Plot dam\_strain and \sire_strain MCMC traces
 
 ```{r, messages=FALSE}
 #plot(allChains[,colnames(dam.mat)]); plot(allChains[,colnames(sire.mat)])
@@ -443,7 +447,6 @@ proj.not.jk <- proj.determ - proj.jk
 proj.not.asymm <- proj.determ - proj.asymm
 proj.total <- proj.determ + proj.epsilon
 proj.y <- proj.determ.mu + proj.epsilon
-
 
 ss.add <- NULL
 ss.mat <- NULL
