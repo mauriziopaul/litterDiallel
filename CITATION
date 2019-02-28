@@ -1,11 +1,10 @@
 citHeader("To cite litterDiallel in publications use:")
 
 citEntry(entry = "Article",
-  title        = "A diallel of Collaborative Cross founder strains exploring litter size heritability reveals strong maternal effects.",
+  title        = "A diallel of the mouse Collaborative Cross founders reveals strong strain-specific maternal effects on litter size.",
   author       = personList(as.person("John R Shorter"),as.person("Paul L Maurizio")),
-  year         = "2018",
+  year         = "2019",
   textVersion  =
-  paste("John R Shorter, and Paul L Maurizio, et al. (2018).",
-        "A diallel of Collaborative Cross founder strains exploring litter size heritability reveals strong maternal effects.")
+  paste("John R Shorter, and Paul L Maurizio, et al. (2019).",
+        "A diallel of the mouse Collaborative Cross founders reveals strong strain-specific maternal effects on litter size.")
 )
-

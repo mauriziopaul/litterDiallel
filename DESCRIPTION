@@ -1,13 +1,13 @@
 Package: litterDiallel
 Type: Package
 Title: Litter Diallel
-Version: 1.0.0
-Date: 2018-09-26
+Version: 1.0.1
+Date: 2019-02-28
 Author: Paul L. Maurizio
 Authors@R: person("Paul", "Maurizio", email = "paul.maurizio@gmail.com",
   role = c("aut", "cre"))
 Maintainer: Paul L. Maurizio <paul.maurizio@gmail.com>
-Description: This package provides the functions necessary for reproducing
+Description: This package provides the functions and necessary for reproducing
     the analyses in the litter diallel paper.
 Depends: R (>= 3.1.0)
 Imports:
@@ -26,5 +26,5 @@ License: GPL-3
 URL: http://mauriziopaul.github.io/
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 VignetteBuilder: knitr
