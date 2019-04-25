@@ -265,8 +265,8 @@ makeRotationMatrix <- function(X, n, ...)
 #' @export
 diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name = NULL, batch.1.col.name = NULL,
     strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
-  dam.mat <- incidence.matrix(data[, as.character(dam.col.name)])[,c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB")]
-  sire.mat <- incidence.matrix(data[, as.character(sire.col.name)])[,c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB")]
+  dam.mat <- incidence.matrix(data[, as.character(dam.col.name)])[,strains]
+  sire.mat <- incidence.matrix(data[, as.character(sire.col.name)])[,strains]
   add.mat <- dam.mat + sire.mat
   mat.mat <- dam.mat - sire.mat
   colnames(dam.mat) <- paste0("dam:", strains)
