@@ -69,7 +69,7 @@ The order of the columns in the data set does not matter.
 
 We use the functions `diallelMatrixMaker` and `diallelMatrixMakeAndRotate` to generate design matrices for modeling the different classes of effects. After reading in the data, these functions expect: the name of the data frame object, the dam column name, the sire column name, and two random effect (`batch`, `batch.1`) column names. 
 
-We then the `MCMCglmm` function from the [`MCMCglmm` package](https://github.com/cran/MCMCglmm) (version 2.25) to analyze our data by fitting (generalized) linear mixed models, including the overdispersed zero-truncated Poisson, binomial, or Gaussian model.
+We then use the `MCMCglmm` function from the [`MCMCglmm` package](https://github.com/cran/MCMCglmm) (version 2.25) to analyze our data by fitting (generalized) linear mixed models, including the overdispersed zero-truncated Poisson, binomial, or Gaussian model.
 
 ## Notes
 
