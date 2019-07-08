@@ -73,7 +73,7 @@ We then the `MCMCglmm` function from the [`MCMCglmm` package](https://github.com
 
 ## Notes
 
-- [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](http://valdarlab.unc.edu/software/bayesdiallel/BayesDiallel.html).
+- [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](https://valdarlab.unc.edu/software/bayesdiallel/).
 
 - [ ] For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:
 
