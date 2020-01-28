@@ -339,8 +339,9 @@ diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name
 #' @export
 diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name, 
                                        batch.col.name=NULL, batch.1.col.name=NULL, 
-                                       n.strains=8, ...){
-  matrices <- diallelMatrixMaker(data, dam.col.name, sire.col.name, batch.col.name, batch.1.col.name)
+                                       n.strains=8, strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
+  matrices <- diallelMatrixMaker(data=data, dam.col.name=dam.col.name, sire.col.name=sire.col.name, batch.col.name=batch.col.name,
+                                 batch.1.col.name=batch.1.col.name, strains=strains)
   dam.mat <- matrices$dam.mat
   sire.mat <- matrices$sire.mat
   add.mat <- matrices$add.mat
@@ -348,8 +349,6 @@ diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name,
   inbred.mat <- matrices$inbred.mat
   jk.mat <- matrices$jk.mat
   asymm.mat <- matrices$asymm.mat
-  batch.mat <- matrices$batch.mat
-  batch.1.mat <- matrices$batch.1.mat
   n.jk <- n.strains*(n.strains-1)/2
   M.dam <- makeRotationMatrix(X = dam.mat, n = n.strains)
   M.sire <- makeRotationMatrix(X = sire.mat, n = n.strains)
@@ -358,8 +357,6 @@ diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name,
   M.inbred <- makeRotationMatrix(X = inbred.mat, n = n.strains)
   M.jk <- makeRotationMatrix(X = jk.mat, n = n.jk)
   M.asymm <- makeRotationMatrix(X = asymm.mat, n = n.jk)
-  M.batch <- makeRotationMatrix(X = batch.mat, n = ncol(batch.mat))
-  M.batch.1 <- makeRotationMatrix(X = batch.1.mat, n = ncol(batch.1.mat))
   t.dam.mat <- dam.mat %*% M.dam
   t.sire.mat <- sire.mat %*% M.sire
   t.add.mat <- add.mat %*% M.add
@@ -367,15 +364,39 @@ diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name,
   t.inbred.mat <- inbred.mat %*% M.inbred
   t.jk.mat <- jk.mat %*% M.jk
   t.asymm.mat <- asymm.mat %*% M.asymm
-  t.batch.mat <- batch.mat %*% M.batch
-  t.batch.1.mat <- batch.1.mat %*% M.batch.1
-  return(list(RotMat=list(	M.dam=M.dam, M.sire=M.sire,
-  							M.add=M.add, M.mat=M.mat, M.inbred=M.inbred, 
-  							M.jk=M.jk, M.asymm=M.asymm,
-                         	M.batch=M.batch, M.batch.1=M.batch.1),
-              DesignMat=list(t.dam.mat=t.dam.mat, t.sire.mat=t.sire.mat,
-              			t.add.mat = t.add.mat, t.mat.mat = t.mat.mat, t.inbred.mat = t.inbred.mat,
-              			t.jk.mat = t.jk.mat, t.asymm.mat = t.asymm.mat, 
-              			t.batch.mat = t.batch.mat, t.batch.1.mat = t.batch.1.mat)))
+  if(!is.null(batch.col.name)){
+    batch.mat <- matrices$batch.mat
+    M.batch <- makeRotationMatrix(X = batch.mat, n = ncol(batch.mat))
+    t.batch.mat <- batch.mat %*% M.batch
+    if(!is.null(batch.1.col.name)){
+      batch.1.mat <- matrices$batch.1.mat
+      M.batch.1 <- makeRotationMatrix(X = batch.1.mat, n = ncol(batch.1.mat))
+      t.batch.1.mat <- batch.1.mat %*% M.batch.1
+      return(list(RotMat=list(	M.dam=M.dam, M.sire=M.sire,
+                               M.add=M.add, M.mat=M.mat, M.inbred=M.inbred, 
+                               M.jk=M.jk, M.asymm=M.asymm,
+                               M.batch=M.batch, M.batch.1=M.batch.1),
+                  DesignMat=list(t.dam.mat=t.dam.mat, t.sire.mat=t.sire.mat,
+                                 t.add.mat = t.add.mat, t.mat.mat = t.mat.mat, t.inbred.mat = t.inbred.mat,
+                                 t.jk.mat = t.jk.mat, t.asymm.mat = t.asymm.mat, 
+                                 t.batch.mat = t.batch.mat, t.batch.1.mat = t.batch.1.mat)))
+    }else{
+      return(list(RotMat=list(	M.dam=M.dam, M.sire=M.sire,
+                               M.add=M.add, M.mat=M.mat, M.inbred=M.inbred, 
+                               M.jk=M.jk, M.asymm=M.asymm,
+                               M.batch=M.batch),
+                  DesignMat=list(t.dam.mat=t.dam.mat, t.sire.mat=t.sire.mat,
+                                 t.add.mat = t.add.mat, t.mat.mat = t.mat.mat, t.inbred.mat = t.inbred.mat,
+                                 t.jk.mat = t.jk.mat, t.asymm.mat = t.asymm.mat, 
+                                 t.batch.mat = t.batch.mat)))
+    }
+  }else{
+    return(list(RotMat=list(	M.dam=M.dam, M.sire=M.sire,
+                             M.add=M.add, M.mat=M.mat, M.inbred=M.inbred, 
+                             M.jk=M.jk, M.asymm=M.asymm),
+                DesignMat=list(t.dam.mat=t.dam.mat, t.sire.mat=t.sire.mat,
+                               t.add.mat = t.add.mat, t.mat.mat = t.mat.mat, t.inbred.mat = t.inbred.mat,
+                               t.jk.mat = t.jk.mat, t.asymm.mat = t.asymm.mat)))
+  }
 }
 
