@@ -339,8 +339,9 @@ diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name
 #' @export
 diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name, 
                                        batch.col.name=NULL, batch.1.col.name=NULL, 
-                                       n.strains=8, ...){
-  matrices <- diallelMatrixMaker(data, dam.col.name, sire.col.name, batch.col.name, batch.1.col.name)
+                                       n.strains=8, strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
+  matrices <- diallelMatrixMaker(data=data, dam.col.name=dam.col.name, sire.col.name=sire.col.name, batch.col.name=batch.col.name,
+                                 batch.1.col.name=batch.1.col.name, strains=strains)
   dam.mat <- matrices$dam.mat
   sire.mat <- matrices$sire.mat
   add.mat <- matrices$add.mat
