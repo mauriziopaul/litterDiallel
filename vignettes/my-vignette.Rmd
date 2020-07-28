@@ -27,7 +27,6 @@ knitr::opts_chunk$set(
 ```{r, message=FALSE}
 library("MCMCglmm")
 library("litterDiallel")
-library("PLMcctools")
 library("xtable")
 ```
 
@@ -217,15 +216,15 @@ xlim=c(-0.3, 0.3);
 
 var.labels.all <- varnames(allChains)
 var.labels <- c(colnames(add.mat), colnames(mat.mat), "inbred", colnames(inbred.mat))
-plot.hpd(allChains[,var.labels], main="general effects", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="general effects", xlim=xlim); abline(v=0, col="grey")
 segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=varcolors.y0, y1=varcolors.y1, col=varcolors[1:4], lwd=7, lend=1)
 
 var.labels <- jk.ordering
-plot.hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
 segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=0.25, y1=27.75, col=varcolors[5], lwd=7, lend=1)
 
 var.labels <- asymm.ordering
-plot.hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
 segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=0.25, y1=27.75, col=varcolors[6], lwd=7, lend=1)
 
 ```
@@ -235,11 +234,11 @@ segments(x0=xlim[1]*0.85, x1=xlim[1]*0.85, y0=0.25, y1=27.75, col=varcolors[6], 
 ```{r, message=FALSE, fig_width=3, fig_height=8}
 var.labels.all <- varnames(allChains)
 var.labels <- c(colnames(batch.mat))[1:24]
-plot.hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
 var.labels <- c(colnames(batch.mat))[25:48]
-plot.hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
 var.labels <- c("litternum", colnames(batch.1.mat))
-plot.hpd(allChains[,var.labels], main="litter order", xlim=xlim); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels], main="litter order", xlim=xlim); abline(v=0, col="grey")
 ```
 
 ## Print tables
@@ -297,8 +296,8 @@ var.labels.all <- varnames(allChains)
 var.labels.new <- c("dam:AJ", "dam:B6", "dam:129", "dam:NOD", "dam:NZO", "dam:CAST", "dam:PWK", "dam:WSB",
                 "sire:AJ", "sire:B6", "sire:129", "sire:NOD", "sire:NZO", "sire:CAST", "sire:PWK", "sire:WSB")
 var.labels <- c(colnames(dam.mat), colnames(sire.mat))#, "inbred", colnames(inbred.mat))
-plot.hpd(allChains[,var.labels[1:8]], xlim=xlim, main="dam strain", main.line=1.75); abline(v=0, col="grey")
-plot.hpd(allChains[,var.labels[9:16]], xlim=xlim, main="sire strain", main.line=1.75); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels[1:8]], xlim=xlim, main="dam strain", main.line=1.75); abline(v=0, col="grey")
+plot_hpd(allChains[,var.labels[9:16]], xlim=xlim, main="sire strain", main.line=1.75); abline(v=0, col="grey")
 ```
 
 ## Plot VarComps

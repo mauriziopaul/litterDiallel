@@ -3,8 +3,7 @@
 \docType{package}
 \name{litterDiallel}
 \alias{litterDiallel}
-\alias{litterDiallel-package}
 \title{litterDiallel: A package for reproducing the analysis used in the litter diallel manuscript.}
 \description{
-litterDiallel: A package for reproducing the analysis used in the litter diallel manuscript.
+A package for reproducing the analysis used in the litter diallel manuscript.
 }

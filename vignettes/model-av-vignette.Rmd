@@ -1,0 +1,346 @@
+---
+title: "Using a simplified a, v model"
+author:
+- name: "Paul L. Maurizio"
+  affiliation: 
+  - The University of Chicago, Department of Medicine, Chicago, IL, USA
+  - The University of North Carolina at Chapel Hill, Department of Genetics, Chapel Hill, NC, USA (previous)
+
+date: "`r Sys.Date()`"
+output: rmarkdown::html_document
+vignette: >
+  %\VignetteIndexEntry{Using a simplified a, v model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Load packages
+
+```{r, message=FALSE}
+library(MCMCglmm)
+library(litterDiallel)
+library(xtable)
+```
+
+## Load data, add column
+
+```{r, message=FALSE}
+data("litters")
+litters$inbred <- ifelse(litters$Dam_Founder == litters$Sire_Founder, 1, 0)
+```
+
+## Generate design matrices
+
+```{r, message=FALSE}
+matrices <- diallelMatrixMaker_av(data=litters, dam.col.name="Dam_Founder", sire.col.name="Sire_Founder",
+                                  batch.col.name="YearMonth", batch.1.col.name="litterorder")
+strains <- c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB")
+matrices.Mt <- diallelMatrixMakeAndRotate_av(litters, dam.col.name="Dam_Founder", 
+  sire.col.name="Sire_Founder", batch.col.name="YearMonth",
+  batch.1.col.name="litterorder", n.strains=length(strains))
+M.matrices <- matrices.Mt[[1]]
+t.matrices <- matrices.Mt[[2]]
+```
+
+## Define design matrices for each random effects class
+
+```{r, message=FALSE}
+add.mat <- matrices$add.mat
+jk.mat <- matrices$jk.mat
+batch.mat <- matrices$batch.mat
+batch.1.mat <- matrices$batch.1.mat
+```
+
+## Define reduced-dimension design matrices to pre-center variable estimates in each class
+### See: Lenarcic et al., 2012, *Genetics*; and Crowley et al., 2014, *Genetics*
+
+```{r, message=FALSE}
+t.add.mat <- t.matrices$t.add.mat
+t.jk.mat <- t.matrices$t.jk.mat
+t.batch.mat <- t.matrices$t.batch.mat
+t.batch.1.mat <- t.matrices$t.batch.1.mat
+```
+
+## Define parameters to model the data as approximately Gaussian, after using a variance-stabilizing transform.
+
+```{r, message=FALSE}
+nitt <- 1515
+burnin <- 15
+thin <- 1
+# nitt <- 15150
+# burnin <- 150
+# thin <- 5
+dist <- "gaussian"
+ordernum <- 0
+adjust <- 0
+litters$SqrtWeaned <- sqrt(litters$Weaned)
+```
+
+## Define priors
+
+```{r, message=FALSE}
+priors <- list(B=list(V=1e+03*diag(2), mu=c(0,0)),
+              R = list(V = diag(1), nu = 0.002),
+              G = list(
+                  G1=list(V=1, nu=0.002), 
+                  G2=list(V=1, nu=0.002), 
+                  G3=list(V=1, nu=0.002), 
+                  G4=list(V=1, nu=0.002)))
+```
+
+## Fit the model
+
+```{r, message=FALSE}
+fit1 <- MCMCglmm(SqrtWeaned ~ 1 + litternum,
+                 random = ~ idv(t.add.mat) +
+                   idv(t.jk.mat) + 
+                   idv(t.batch.mat) + idv(t.batch.1.mat),
+                 prior=priors,
+                 nitt=nitt, burnin = burnin,
+                 thin=thin, pr=TRUE,
+                 family = "gaussian", data=litters)
+```
+
+## Retrieve MCMC chains
+
+```{r, message=FALSE}
+allChains <- as.mcmc(cbind(fit1$Sol,fit1$VCV))
+allChains.fixed <- allChains[,c("(Intercept)", "litternum")]
+colnames(allChains.fixed) <- c("mu", "litternum")
+allChains.add <- allChains[, grep(colnames(allChains), pattern="^t.add.mat[^.]", value=TRUE)]
+allChains.jk <- allChains[, grep(colnames(allChains), pattern="^t.jk.mat[^.]", value=TRUE)]
+allChains.batch <- allChains[, grep(colnames(allChains), pattern="^t.batch.mat[^.]", value=TRUE)]
+allChains.batch.1 <- allChains[, grep(colnames(allChains), pattern="^t.batch.1.mat[^.]", value=TRUE)]
+allChains.sigma <- allChains[, c('t.add.mat.', 't.jk.mat.', 
+                                 't.batch.mat.', 't.batch.1.mat.', 'units')]
+```
+
+## Rotate parameter estimates back to full parameter space
+
+```{r, message=FALSE}
+M.add <- M.matrices$M.add
+M.jk <- M.matrices$M.jk
+M.batch <- M.matrices$M.batch
+M.batch.1 <- M.matrices$M.batch.1
+
+allChains.add <- allChains.add %*% t(M.add)
+allChains.jk <- allChains.jk %*% t(M.jk)
+allChains.batch <- allChains.batch %*% t(M.batch)
+allChains.batch.1 <- allChains.batch.1 %*% t(M.batch.1)
+
+colnames(allChains.add) <- colnames(add.mat)
+colnames(allChains.jk) <- colnames(jk.mat)
+colnames(allChains.batch) <- colnames(batch.mat)
+colnames(allChains.batch.1) <- colnames(batch.1.mat)
+```
+
+## Edit parameter class names, combine chains
+
+```{r, message=FALSE}
+colnames(allChains.sigma) <- c("tau-sq-add",
+                               "tau-sq-jk",
+                               "tau-sq-year-month",
+                               "tau-sq-litterorder",
+                               "sigma-sq")
+
+allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, 
+                   allChains.jk, 
+                   allChains.batch, allChains.batch.1,
+                   allChains.sigma))
+```
+
+## Plot MCMC traces
+
+```{r, message=FALSE}
+#plot(allChains[,1])
+```
+
+## Plot diallel effect estimates
+
+```{r, message=FALSE, fig_width=3, fig_height=8}
+xlim=c(-0.3, 0.3);
+
+var.labels.all <- varnames(allChains)
+var.labels <- colnames(add.mat)
+plot_hpd(allChains[,var.labels], main="general effects", xlim=xlim); abline(v=0, col="grey")
+
+var.labels <- colnames(jk.mat)
+plot_hpd(allChains[,var.labels], main="strainpair-specific", xlim=xlim); abline(v=0, col="grey")
+```
+
+## Plot covariate effect estimates
+
+```{r, message=FALSE, fig_width=3, fig_height=8}
+var.labels.all <- varnames(allChains)
+var.labels <- c(colnames(batch.mat))[1:24]
+plot_hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+var.labels <- c(colnames(batch.mat))[25:48]
+plot_hpd(allChains[,var.labels], main="wean date", xlim=xlim); abline(v=0, col="grey")
+var.labels <- c("litternum", colnames(batch.1.mat))
+plot_hpd(allChains[,var.labels], main="litter order", xlim=xlim); abline(v=0, col="grey")
+```
+
+## Print tables
+
+```{r, results="asis"}
+#hpd.table1 <- summary(allChains)[[1]]
+hpd.table2 <- summary(allChains)[[2]]
+#print(xtable(hpd.table1), type="html")
+print(xtable(hpd.table2, digits=4), type="html")
+```
+
+
+## Plot VarComps
+
+```{r, messages=FALSE}
+allChains.sigma.names <- c("tau-sq-add",
+                           "tau-sq-jk",
+                           "sigma-sq")
+allChains.sigma <- allChains[,allChains.sigma.names]
+
+var.df <- cbind(as.data.frame(allChains[, allChains.sigma.names]), adjust)
+names(var.df)[names(var.df)=="var1"] <- "adjust"
+var.df$total <- var.df$`tau-sq-add` +
+                var.df$`tau-sq-jk` +
+                var.df$`sigma-sq` + var.df$`adjust`
+varcomp <- NULL
+varcomp$additive <- var.df$`tau-sq-add` / var.df$`total`
+varcomp$symmetric.epistatic <- var.df$`tau-sq-jk` / var.df$`total`
+
+varcomp$total.explained <- (var.df$`total` - var.df$`sigma-sq` - var.df$`adjust`)/ var.df$`total`
+varcomp$noise <- (var.df$`sigma-sq` + var.df$`adjust`)/var.df$`total`
+varcomp <- as.data.frame(varcomp)
+
+varcomp.table <- cbind(mean=colMeans(varcomp), 
+	lower.bound=HPDinterval(as.mcmc(varcomp))[,1],
+	upper.bound=HPDinterval(as.mcmc(varcomp))[,2])
+
+# varcolors.y0 <- c(7.5, 6.5, 5.5, 4.5, 3.5)
+# varcolors.y1 <- c(6.5, 5.5, 4.5, 3.5, 2.5)
+psq <- data.frame(varcomp.table)
+
+par(mar = c(5.1, 13.5, 2.1, 12.1))
+rows <- nrow(psq)
+plot(y = c(0.5, rows + 0.5), x = c(-0.06, 1.01), yaxs = "i",
+    xaxs = "i", col = "white", ylab = "", xlab = "variance explained",
+    yaxt = "n")
+abline(v = c(0, 0.2, 0.4, 0.6, 0.8, 1), lty = 2, col = "grey")
+abline(h = 2.5, lwd = 1.5)
+axis(side = 2, at = c(rows:1), labels = rownames(psq),
+    las = 1)
+rightlabels <- paste(as.character(sprintf("%.2f", round(100 *
+    psq$mean, digits = 2))), "% (", as.character(sprintf("%.2f",
+    round(100 * psq$lower.bound, digits = 2))), "%, ", as.character(sprintf("%.2f",
+    round(100 * psq$upper.bound, digits = 2))), "%)", sep = "")
+axis(side = 4, at = c(rows:1), labels = rightlabels, tick = FALSE,
+    las = 1)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "black",
+    cex = 1.5)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
+    cex = 0.5)
+```
+
+## Table of results
+
+```{r, results="asis"}
+print(xtable(psq, digits=4), type="html")
+```
+
+## Plot VarPs
+
+```{r, messages=FALSE}
+allChains.df <- data.frame(allChains, check.names=FALSE)
+
+allChains.fixed <- allChains.df[,c("mu", "litternum")]
+allChains.add <- as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^additive[^.]", value=TRUE)])
+allChains.jk <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^v[^.]", value=TRUE)])
+allChains.batch <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^YearMonth[^.]", value=TRUE)])
+allChains.batch.1 <-   as.matrix(allChains.df[, grep(colnames(allChains.df), pattern="^order[^.]", value=TRUE)])
+allChains.sigma <-   as.matrix(cbind(allChains.df[, grep(colnames(allChains.df), pattern="^tau-sq-[^.]", value=TRUE)],
+                      `sigma-sq`=allChains.df$`sigma-sq`))
+
+allChains <- as.mcmc(cbind(allChains.fixed, allChains.add, allChains.jk,
+                           allChains.batch, allChains.batch.1,
+                           allChains.sigma))
+
+founder.names <- c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB")
+projection <- as.data.frame(as.matrix(expand.grid(founder.names, founder.names)[,c(2,1)]))
+
+colnames(projection) <- c("Dam_Founder", "Sire_Founder")
+projection.matrices <- diallelMatrixMaker_av(projection, dam.col.name="Dam_Founder", sire.col.name="Sire_Founder")
+
+proj.add <- apply(allChains.add, MARGIN=1, FUN=function(x){projection.matrices$add.mat %*% x})
+proj.jk <- apply(allChains.jk, MARGIN=1, FUN=function(x){projection.matrices$jk.mat %*% x})
+proj.mu <- matrix(rep(allChains.fixed[,"mu"],each=dim(projection)[1]),nrow=dim(projection)[1])
+
+proj.epsilon <- sapply(allChains.sigma[,"sigma-sq"], FUN=function(x){rnorm(n=dim(projection)[1], mean=0, sd=sqrt(x))})
+proj.determ.mu <- proj.mu + proj.add + proj.jk 
+proj.determ <- proj.add + proj.jk
+
+proj.not.add <- proj.determ - proj.add
+proj.not.jk <- proj.determ - proj.jk
+proj.total <- proj.determ + proj.epsilon
+proj.y <- proj.determ.mu + proj.epsilon
+
+ss.add <- NULL
+ss.jk <- NULL
+ss.epsilon <- NULL
+ss.denom <- NULL
+
+for(i in 1:dim(proj.add)[2]){
+  ss.add[i] <- sum((proj.determ[,i] - proj.not.add[,i])^2)
+  ss.jk[i] <- sum((proj.determ[,i] - proj.not.jk[,i])^2)
+  ss.epsilon[i] <- sum((proj.y[,i] - proj.determ.mu[,i])^2)
+}
+
+Y.bar <- matrix(rep(apply(proj.determ, MARGIN=2, FUN=sum)/dim(projection)[1], each=dim(projection)[1]), nrow=dim(projection)[1])
+ss.denom <- ss.add + ss.jk + ss.epsilon + adjust
+
+additive <- ss.add/ss.denom
+epistatic.symm <- ss.jk/ss.denom
+explained <- (ss.add + ss.jk)/ss.denom
+unexplained <- 1 - explained
+
+varps.all <- cbind(additive, symmetric.epistatic=epistatic.symm, total.explained=explained, noise=unexplained)
+varps.all.table <- cbind(mean=colMeans(varps.all), 
+	lower.bound=HPDinterval(as.mcmc(varps.all))[,1],
+	upper.bound=HPDinterval(as.mcmc(varps.all))[,2])
+
+psq <- data.frame(varps.all.table)
+
+par(mar = c(5.1, 13.5, 2.1, 12.1))
+rows <- nrow(psq)
+plot(y = c(0.5, rows + 0.5), x = c(-0.06, 1.01), yaxs = "i",
+    xaxs = "i", col = "white", ylab = "", xlab = "Variance Projection",
+    yaxt = "n")
+abline(v = c(0, 0.2, 0.4, 0.6, 0.8, 1), lty = 2, col = "grey")
+abline(h = 2.5, lwd = 1.5)
+segments(x0 = psq$lower.bound, x1 = psq$upper.bound, y0 = c(rows:1),
+    y1 = c(rows:1), lwd = 4, lend=1)
+axis(side = 2, at = c(rows:1), labels = rownames(psq),
+    las = 1)
+rightlabels <- paste(as.character(sprintf("%.2f", round(100 *
+    psq$mean, digits = 2))), "% (", as.character(sprintf("%.2f",
+    round(100 * psq$lower.bound, digits = 2))), "%, ", as.character(sprintf("%.2f",
+    round(100 * psq$upper.bound, digits = 2))), "%)", sep = "")
+axis(side = 4, at = c(rows:1), labels = rightlabels, tick = FALSE,
+    las = 1)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "black",
+    cex = 1.5)
+points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
+    cex = 0.5)
+```
+
+## Table of results
+
+```{r, results="asis"}
+print(xtable(psq, digits=4), type="html")
+```

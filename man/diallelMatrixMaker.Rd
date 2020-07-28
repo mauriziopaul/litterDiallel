@@ -4,9 +4,15 @@
 \alias{diallelMatrixMaker}
 \title{diallelMatrixMaker}
 \usage{
-diallelMatrixMaker(data, dam.col.name, sire.col.name,
-  batch.col.name = NULL, batch.1.col.name = NULL, strains = c("AJ",
-  "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...)
+diallelMatrixMaker(
+  data,
+  dam.col.name,
+  sire.col.name,
+  batch.col.name = NULL,
+  batch.1.col.name = NULL,
+  strains = c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"),
+  ...
+)
 }
 \arguments{
 \item{data}{data frame}
@@ -18,6 +24,8 @@ diallelMatrixMaker(data, dam.col.name, sire.col.name,
 \item{batch.col.name}{name of batch/random effect column}
 
 \item{batch.1.col.name}{name of additional batch/random effect column}
+
+\item{strains}{character vector with names of inbred parental strains}
 
 \item{...}{additional arguments}
 }

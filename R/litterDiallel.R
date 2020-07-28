@@ -1,13 +1,7 @@
-##---------------------------------------------------------------------------------------------------------------------
-## Title: Litter Diallel - functions used for analyses in the litter diallel manuscript
-## Author: Paul L. Maurizio
-## Email: paul.maurizio@gmail.com
-## Date Created: 2018-08-05
-## Date Updated: 2018-08-27
-##---------------------------------------------------------------------------------------------------------------------
-
 #' litterDiallel: A package for reproducing the analysis used in the litter diallel manuscript.
 #'
+#' A package for reproducing the analysis used in the litter diallel manuscript.
+#' 
 #' @docType package
 
 #' @name litterDiallel
@@ -30,7 +24,7 @@ incidence.matrix <- function(fact, ...){
     m
 }
 
-#' @title plot.hpd: Plot highest posterior density intervals
+#' @title plot_hpd: Plot highest posterior density intervals
 #' @description Plot HPD intervals. (From the BayesDiallel package, Will Valdar and Alan Lenarcic).
 #' @param coda.object coda object
 #' @param wanted variable names for coda object
@@ -52,9 +46,9 @@ incidence.matrix <- function(fact, ...){
 #' @return returns HPD plot
 #' @examples
 #' ## not run
-#' @export plot.hpd
-plot.hpd <- function(coda.object,
-    wanted=varnames(coda.object),
+#' @export plot_hpd
+plot_hpd <- function(coda.object,
+    wanted=coda::varnames(coda.object),
     prob.wide=0.95,
     prob.narrow=0.50,
     xlab="HPD interval",
@@ -65,7 +59,7 @@ plot.hpd <- function(coda.object,
     ylab="",  name.line = 3.9, main="", main.line=2,
     ...)
 {
-  which.wanted=ifow(is.integer(wanted), wanted, match(wanted, varnames(coda.object)))
+  which.wanted=ifow(is.integer(wanted), wanted, match(wanted, coda::varnames(coda.object)))
   num.wanted=length(which.wanted)
   if(!exists("name.margin") || is.null(name.margin)) { name.margin = 6.1; }
   chain <- mcmc.stack(coda.object)
@@ -76,21 +70,29 @@ plot.hpd <- function(coda.object,
   hpd.narrow  <- coda::HPDinterval(chain, prob=prob.narrow)[which.wanted,]
 
     mid.vals <- med;
-  if (is.null(names)) names <- varnames(chain)[which.wanted]
+  if (is.null(names)) names <- coda::varnames(chain)[which.wanted]
   else names <- rep(names, length.out=length(wanted))
-  ypos <- plot.ci(med, hpd.narrow, hpd.wide, names=names, xlab=xlab, col.midvals="white", pch.midvals="|", type=type,
+  ypos <- plot_ci(med, hpd.narrow, hpd.wide, names=names, xlab=xlab, col.midvals="white", pch.midvals="|", type=type,
     name.margin=name.margin,plt.left=plt.left, plt.right=plt.right,
     plt.bottom=plt.bottom, plt.title=plt.title, ylab=ylab,
     name.line = name.line, main=main, main.line=main.line, ...)
   if ("p"==type)
   {
-    points(mu, ypos, pch="|")
+    graphics::points(mu, ypos, pch="|")
   }
   invisible(ypos)
 }
 
 # Source: WVmisc package
-#' @export
+#' @title ifow
+#' @description if, otherwise
+#' @param test test
+#' @param yes specify yes
+#' @param no specify no
+#' @return returns yes if test is true, no if false
+#' @examples
+#' ## not run
+#' @export ifow
 ifow <- function(test, yes, no)
 {
   if (test)
@@ -101,7 +103,17 @@ ifow <- function(test, yes, no)
 }
 
 # Source: WVgraphics package
-#' @export
+#' @title sides
+#' @description define sides of a plot
+#' @param default specify overall default
+#' @param bottom specify bottom
+#' @param left specify left
+#' @param top specify top
+#' @param right specify default
+#' @return returns named side arguments
+#' @examples
+#' ## not run
+#' @export sides
 sides <- function(default=NA, bottom=default, left=default, top=default, right=default)
 {
   x=c(bottom, left, top, right)
@@ -110,15 +122,29 @@ sides <- function(default=NA, bottom=default, left=default, top=default, right=d
 }
 
 # Source: WVgraphics package
-#' @export
-update.sides=function(old=par("mar"), new=rep(NA, 4))
+#' @title update_sides
+#' @description update sides of a plot
+#' @param old defaults to par("mar")
+#' @param new defaults to 4 NA's
+#' @return returns updated sides
+#' @examples
+#' ## not run
+#' @export update_sides
+update_sides=function(old=graphics::par("mar"), new=rep(NA, 4))
 {
   old[!is.na(new)]=new[!is.na(new)]
   old
 }
 
 # Source: BayesDiallel package
-#' @export
+#' @title mcmc.stack
+#' @description stack multiple mcmc chains into one mcmc object
+#' @param coda.object coda object with multiple chains
+#' @param ... additional arguments
+#' @return returns stacked mcmc
+#' @examples
+#' ## not run
+#' @export mcmc.stack
 mcmc.stack <- function (coda.object, ...){
   ## This function is from Will; also part of BayesDiallel
     if (inherits(coda.object, "mcmc")) {
@@ -128,15 +154,54 @@ mcmc.stack <- function (coda.object, ...){
         stop("Non-mcmc object passed to function\n")
     }
     chain <- coda.object[[1]]
-    for (i in 2:nchain(coda.object)) {
+    for (i in 2:coda::nchain(coda.object)) {
         chain <- rbind(chain, coda.object[[i]])
     }
-    as.mcmc(chain)
+    coda::as.mcmc(chain)
 }
 
 # Source: BayesDiallel package
-#' @export
-plot.ci <- function(midvals, narrow.intervals, wide.intervals,
+#' @title plot_ci
+#' @description stack multiple mcmc chains into one mcmc object
+#' @param midvals midvals
+#' @param narrow.intervals narrow.intervals
+#' @param wide.intervals wide.intervals
+#' @param names names
+#' @param add add
+#' @param main main
+#' @param main.line main.line
+#' @param xlab xlab
+#' @param xlab.line xlab.line
+#' @param xlim xlim
+#' @param ylab ylab
+#' @param yaxis yaxis
+#' @param ylim ylim
+#' @param name.line name.line
+#' @param pch.midvals pch.midvals
+#' @param col col
+#' @param col.midvals col.midvals
+#' @param cex.labels cex.labels
+#' @param type type
+#' @param name.margin name.margin
+#' @param title.margin title.margin
+#' @param title.line title.line
+#' @param bottom.margin bottom.margin
+#' @param bottom.line bottom.line
+#' @param right.margin right.margin
+#' @param right.line right.line
+#' @param mar mar
+#' @param mar.update mar.update
+#' @param before.data before.data
+#' @param plt.left plt.left
+#' @param plt.right plt.right
+#' @param plt.bottom plt.bottom
+#' @param plt.title plt.title
+#' @param ... additional arguments
+#' @return returns plotted caterpillar plot with confidence intervals
+#' @examples
+#' ## not run
+#' @export plot_ci
+plot_ci <- function(midvals, narrow.intervals, wide.intervals,
     names=1:length(midvals),
     add=FALSE,
     main="", main.line=2,
@@ -161,7 +226,7 @@ plot.ci <- function(midvals, narrow.intervals, wide.intervals,
     before.data=function(){},
     plt.left=NULL, plt.right=NULL, plt.bottom=NULL, plt.title=NULL,
     ...)
-# Example: plot.ci( c(0,10), narrow.intervals=rbind(c(-1,1), c(8,12)), wide.intervals=rbind(c(-3,4), c(5,15)), names=c("Fred", "Barney"))
+# Example: plot_ci( c(0,10), narrow.intervals=rbind(c(-1,1), c(8,12)), wide.intervals=rbind(c(-3,4), c(5,15)), names=c("Fred", "Barney"))
 {
   nvals <- length(midvals)
   col.midvals <- rep(col.midvals, length.out=nvals)
@@ -191,8 +256,8 @@ plot.ci <- function(midvals, narrow.intervals, wide.intervals,
       bottom.margin=5.1* plt.bottom / .16;
     }
     mar <- c(bottom.margin, name.margin, title.margin, right.margin)+0.1
-    mar=update.sides(mar, mar.update)
-    oldmar <- par(mar=mar); on.exit(par(mar=oldmar))
+    mar=update_sides(mar, mar.update)
+    oldmar <- graphics::par(mar=mar); on.exit(graphics::par(mar=oldmar))
 
     MyD = FALSE;
     AT = "plot(x = xlim, y=ylim, type=\"n\", axes=FALSE, ylab=ylab, xlim=xlim, ylim=ylim, xlab=\"\", main=\"\",
@@ -203,14 +268,14 @@ plot.ci <- function(midvals, narrow.intervals, wide.intervals,
     }
 
     if (!is.null(main) && is.character(main) && main[1] != "") {
-      try(title(main=main, line=main.line, cex.main = 1.5));
+      try(graphics::title(main=main, line=main.line, cex.main = 1.5));
     }
-    title(xlab=xlab, line=xlab.line)
-    axis(1)
-    axis(3, line=-.8)
+    graphics::title(xlab=xlab, line=xlab.line)
+    graphics::axis(1)
+    graphics::axis(3, line=-.8)
     if (yaxis)
     {
-      axis(2, at=y.pos, labels=rev(names), las=1, lty=0, hadj=0, line=name.line, cex.axis=cex.labels)
+      graphics::axis(2, at=y.pos, labels=rev(names), las=1, lty=0, hadj=0, line=name.line, cex.axis=cex.labels)
     }
   }
   before.data()
@@ -219,14 +284,13 @@ plot.ci <- function(midvals, narrow.intervals, wide.intervals,
     for (i in 1:nvals)
     {
       pos <- nvals-i + 0.5
-      lines(wide.intervals[i,], rep(pos,2))
-      lines(narrow.intervals[i,], rep(pos,2), lwd=3)
-      points(midvals[i], pos, pch=pch.midvals, col=col.midvals[i])
+      graphics::lines(wide.intervals[i,], rep(pos,2))
+      graphics::lines(narrow.intervals[i,], rep(pos,2), lwd=3)
+      graphics::points(midvals[i], pos, pch=pch.midvals, col=col.midvals[i])
     }
   }
   invisible(rev(y.pos))
 }
-
 
 #' @title makeRotationMatrix: Make a rotation matrix
 #' @description Turn an n-column design matrix into an n-1, sum to 0, design matrix
@@ -258,6 +322,7 @@ makeRotationMatrix <- function(X, n, ...)
 #' @param sire.col.name sire column name
 #' @param batch.col.name name of batch/random effect column
 #' @param batch.1.col.name name of additional batch/random effect column
+#' @param strains character vector with names of inbred parental strains
 #' @param ... additional arguments
 #' @return returns diallel incidence matrices
 #' @examples
@@ -324,6 +389,63 @@ diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name
   }
 }
 
+#' @title diallelMatrixMaker_av
+#' @description Make design matrices for diallel, model (a, v)
+#' @param data data frame
+#' @param dam.col.name dam column name
+#' @param sire.col.name sire column name
+#' @param batch.col.name name of batch/random effect column
+#' @param batch.1.col.name name of additional batch/random effect column
+#' @param strains character vector with names of inbred parental strains
+#' @param ... additional arguments
+#' @return returns diallel incidence matrices
+#' @examples
+#' ## not run
+#' @export
+diallelMatrixMaker_av <- function(data, dam.col.name, sire.col.name, batch.col.name = NULL, batch.1.col.name = NULL,
+                               strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
+  dam.mat <- incidence.matrix(as.factor(data[, as.character(dam.col.name)]))[,strains]
+  sire.mat <- incidence.matrix(as.factor(data[, as.character(sire.col.name)]))[,strains]
+  add.mat <- dam.mat + sire.mat
+  colnames(add.mat) <- paste0("additive:", strains)
+  # names according to lower triangular matrix, down first row, down second, etc.
+  cross.n <- length(strains)
+  jk.names <- NULL
+
+  for(k in 1:cross.n){
+    for(j in 1:cross.n){
+      if(j > k){
+        jk.names <- c(jk.names, paste(strains[j], strains[k], sep=";"))
+      }
+    }
+  }
+
+  jk.bind <- cbind.data.frame(data[, as.character(dam.col.name)],
+                              data[, as.character(sire.col.name)])
+  jk <- apply(X=jk.bind, MARGIN=1, FUN=function(x){ifelse(paste(x, collapse=";") %in% jk.names, paste(x, collapse=";"), paste(rev(x), collapse=";"))})
+  jk.asymm <- apply(X=jk.bind, MARGIN=1, FUN=function(x){paste(rev(x), collapse=";")})
+  jk.mat <- incidence.matrix(as.factor(jk))
+  drops <- paste(strains, strains, sep=";")
+  jk.mat <- jk.mat[, !(colnames(jk.mat) %in% drops)]
+  colnames(jk.mat) <- paste0("v:", colnames(jk.mat))
+  if (is.null(batch.col.name) & is.null(batch.1.col.name)) {
+    return(list(add.mat = add.mat, jk.mat = jk.mat))
+  }
+  else {
+    if(1==length(batch.col.name)){
+      batch.mat <- incidence.matrix(as.factor(data[, as.character(batch.col.name)]))
+      batch.1.mat <- NULL
+      try(batch.1.mat <- incidence.matrix(as.factor(data[,
+                                                         as.character(batch.1.col.name)])))
+      return(list(add.mat = add.mat, jk.mat = jk.mat, batch.mat = batch.mat,
+                  batch.1.mat = batch.1.mat))
+    }
+    else{
+      stop("Not implemented for length(batch.col.name)>1")
+    }
+  }
+}
+
 #' @title diallelMatrixMakeAndRotate
 #' @description Make design matrices for diallel, rotate to n-1 space.
 #' @param data data frame
@@ -331,6 +453,7 @@ diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name
 #' @param sire.col.name sire column name
 #' @param batch.col.name name of batch/random effect column
 #' @param batch.1.col.name name of additional batch/random effect column
+#' @param strains character vector with names of inbred parental strains
 #' @param ... additional arguments
 #' @return returns diallel incidence matrices, rotated
 #' @examples
@@ -338,9 +461,10 @@ diallelMatrixMaker <- function(data, dam.col.name, sire.col.name, batch.col.name
 #' @export
 diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name,
                                        batch.col.name=NULL, batch.1.col.name=NULL,
-                                       n.strains=8, strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
+                                       strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
   matrices <- diallelMatrixMaker(data=data, dam.col.name=dam.col.name, sire.col.name=sire.col.name, batch.col.name=batch.col.name,
                                  batch.1.col.name=batch.1.col.name, strains=strains)
+  n.strains <- length(strains)
   dam.mat <- matrices$dam.mat
   sire.mat <- matrices$sire.mat
   add.mat <- matrices$add.mat
@@ -396,6 +520,60 @@ diallelMatrixMakeAndRotate <- function(data, dam.col.name, sire.col.name,
                 DesignMat=list(t.dam.mat=t.dam.mat, t.sire.mat=t.sire.mat,
                                t.add.mat = t.add.mat, t.mat.mat = t.mat.mat, t.inbred.mat = t.inbred.mat,
                                t.jk.mat = t.jk.mat, t.asymm.mat = t.asymm.mat)))
+  }
+}
+
+#' @title diallelMatrixMakeAndRotate_av
+#' @description Make design matrices for diallel, rotate to n-1 space. (a, v) model
+#' @param data data frame
+#' @param dam.col.name dam column name
+#' @param sire.col.name sire column name
+#' @param batch.col.name name of batch/random effect column
+#' @param batch.1.col.name name of additional batch/random effect column
+#' @param strains character vector with names of inbred parental strains
+#' @param ... additional arguments
+#' @return returns diallel incidence matrices, rotated
+#' @examples
+#' ## not run
+#' @export
+diallelMatrixMakeAndRotate_av <- function(data, dam.col.name, sire.col.name,
+                                       batch.col.name=NULL, batch.1.col.name=NULL,
+                                       strains=c("AJ", "B6", "129", "NOD", "NZO", "CAST", "PWK", "WSB"), ...){
+  matrices <- diallelMatrixMaker_av(data=data, dam.col.name=dam.col.name, sire.col.name=sire.col.name, batch.col.name=batch.col.name,
+                                 batch.1.col.name=batch.1.col.name, strains=strains)
+  n.strains <- length(strains)
+  add.mat <- matrices$add.mat
+  jk.mat <- matrices$jk.mat
+  n.jk <- n.strains*(n.strains-1)/2
+  M.add <- makeRotationMatrix(X = add.mat, n = n.strains)
+  M.jk <- makeRotationMatrix(X = jk.mat, n = n.jk)
+  t.add.mat <- add.mat %*% M.add
+  t.jk.mat <- jk.mat %*% M.jk
+  if(!is.null(batch.col.name)){
+    batch.mat <- matrices$batch.mat
+    M.batch <- makeRotationMatrix(X = batch.mat, n = ncol(batch.mat))
+    t.batch.mat <- batch.mat %*% M.batch
+    if(!is.null(batch.1.col.name)){
+      batch.1.mat <- matrices$batch.1.mat
+      M.batch.1 <- makeRotationMatrix(X = batch.1.mat, n = ncol(batch.1.mat))
+      t.batch.1.mat <- batch.1.mat %*% M.batch.1
+      return(list(RotMat=list(M.add=M.add,
+                               M.jk=M.jk,
+                               M.batch=M.batch, M.batch.1=M.batch.1),
+                  DesignMat=list(t.add.mat = t.add.mat,
+                                 t.jk.mat = t.jk.mat,
+                                 t.batch.mat = t.batch.mat, t.batch.1.mat = t.batch.1.mat)))
+    }else{
+      return(list(RotMat=list(M.add=M.add,
+                               M.jk=M.jk,
+                               M.batch=M.batch),
+                  DesignMat=list(t.add.mat = t.add.mat,
+                                 t.jk.mat = t.jk.mat,
+                                 t.batch.mat = t.batch.mat)))
+    }
+  }else{
+    return(list(RotMat=list(M.add=M.add, M.jk=M.jk),
+                DesignMat=list(t.add.mat = t.add.mat, t.jk.mat = t.jk.mat)))
   }
 }
 

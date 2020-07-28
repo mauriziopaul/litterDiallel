@@ -1,0 +1,20 @@
+#' Litters from a mouse diallel cross of Collaborative Cross founder strains
+#'
+#' A dataset containing (male and female) counts of offspring for 4,448 litters
+#'
+#' @format A data frame with 4448 rows and 12 variables:
+#' \describe{
+#'   \item{Dam_Founder}{(factor): The inbred mouse strain name of the female parent, where the following abbreviations are used: A/J (AJ), C57BL/6J (B6), 129S1/SvImJ (129S1), NOD/ShiLtJ (NOD), NZO/HlLtJ (NZO), CAST/EiJ (CAST), PWK/PhJ (PWK), and WSB/EiJ (WSB).}
+#'   \item{Sire_Founder}{(factor): The inbred mouse strain name of the male parent.}
+#'   \item{PupGeno}{(factor): The strain-cross name of the F1 offspring, given as their dam-by-sire cross (strainDam x strainSire).}
+#'   \item{WeanDate}{(factor): The date (DD/MM/YY) that animals were weaned into new cages and separated from their parents.}
+#'   \item{YearMonth}{(factor): The date (YearMonth-YYYY-MM) of weaning.}
+#'   \item{litterorder}{(factor): The parity, or litter birth order based on dam, is provided as a factor.}
+#'   \item{litternum}{(integer): The litter number (litterorder - 1) is provided as an integer, where the first litter is 0, and each subsequent litter is numbered starting at 1.}
+#'   \item{First_Litter}{(integer): A binary variable taking the values 0 or 1, indicating whether it is the first litter born to the given dam.}
+#'   \item{Males}{(integer): The number of male pups in the litter.}
+#'   \item{Females}{(integer): The number of female pups in the litter.}
+#'   \item{Weaned}{(integer): The total number of (male and female) pups in the litter.}
+#'   \item{Male_Prop}{(numeric): The proportion of male pups to overall pups in the litter.}
+#' }
+"litters"

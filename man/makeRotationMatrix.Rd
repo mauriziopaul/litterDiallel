@@ -18,7 +18,7 @@ generates rotation matrix to reduce dimensions for better sampling
 }
 \description{
 Turn an n-column design matrix into an n-1, sum to 0, design matrix
-             while maintaining independence. 
+             while maintaining independence.
              See Appendix (Lenarcic, 2012, Genetics; Crowley, 2014, Genetics)
 }
 \examples{

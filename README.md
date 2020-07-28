@@ -73,6 +73,8 @@ We then use the `MCMCglmm` function from the [`MCMCglmm` package](https://github
 
 ## Notes
 
+- [ ] The "fulls" model (with sex-specific effects) and the "a,v" model (with additive and epistatic effects only) can now be run with this package.
+
 - [ ] For the model inclusion probability analysis, BayesDiallel and BayesSpike must be installed. The instructions are [here](https://valdarlab.unc.edu/software/bayesdiallel/).
 
 - [ ] For some simple, miscellaneous functions useful for this analysis, install the following package, `PLMcctools`:

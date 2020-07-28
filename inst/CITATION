@@ -1,0 +1,17 @@
+citHeader("To cite litterDiallel in publications use:")
+
+citEntry(entry = "Article",
+author = personList(as.person("John R. Shorter"), as.person("Paul L. Maurizio"), as.person("Timothy A. Bell"), as.person("Ginger D. Shaw"), as.person("Darla R. Miller"), as.person("Terry J. Gooch"), as.person("Jason S. Spence"), as.person("Leonard McMillan"), as.person("William Valdar"), as.person("Fernando Pardo-Manuel de Villena")),
+	title = "A Diallel of the Mouse Collaborative Cross Founders Reveals Strong Strain-Specific Maternal Effects on Litter Size",
+	volume = 9,
+	number = 5,
+	pages = "1613--1622",
+	year = 2019,
+	doi = "10.1534/g3.118.200847",
+	publisher = "G3: Genes, Genomes, Genetics",
+	abstract = "Reproductive success in the eight founder strains of the Collaborative Cross (CC) was measured using a diallel-mating scheme. Over a 48-month period we generated 4,448 litters, and provided 24,782 weaned pups for use in 16 different published experiments. We identified factors that affect the average litter size in a cross by estimating the overall contribution of parent-of-origin, heterosis, inbred, and epistatic effects using a Bayesian zero-truncated overdispersed Poisson mixed model. The phenotypic variance of litter size has a substantial contribution (82\\%) from unexplained and environmental sources, but no detectable effect of seasonality. Most of the explained variance was due to additive effects (9.2\\%) and parental sex (maternal vs. paternal strain; 5.8\\%), with epistasis accounting for 3.4\\%. Within the parental effects, the effect of the dam{\textquoteright}s strain explained more than the sire{\textquoteright}s strain (13.2\\% vs. 1.8\\%), and the dam{\textquoteright}s strain effects account for 74.2\\% of total variation explained. Dams from strains C57BL/6J and NOD/ShiLtJ increased the expected litter size by a mean of 1.66 and 1.79 pups, whereas dams from strains WSB/EiJ, PWK/PhJ, and CAST/EiJ reduced expected litter size by a mean of 1.51, 0.81, and 0.90 pups. Finally, there was no strong evidence for strain-specific effects on sex ratio distortion. Overall, these results demonstrate that strains vary substantially in their reproductive ability depending on their genetic background, and that litter size is largely determined by dam{\textquoteright}s strain rather than sire{\textquoteright}s strain effects, as expected. This analysis adds to our understanding of factors that influence litter size in mammals, and also helps to explain breeding successes and failures in the extinct lines and surviving CC strains.",
+	URL = "https://www.g3journal.org/content/9/5/1613",
+	journal = "G3: Genes, Genomes, Genetics",
+	textVersion = paste("Shorter J.R., and Maurizio P.L., et al. (2019).",
+        "A diallel of the mouse Collaborative Cross founders reveals strong strain-specific maternal effects on litter size.", "G3: Genes, Genomes, Genetics. 9(5):1613--1622")
+)
