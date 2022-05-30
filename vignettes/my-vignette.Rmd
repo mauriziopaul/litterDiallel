@@ -484,7 +484,7 @@ epistatic.asymm <- ss.asymm/ss.denom
 explained <- (ss.add + ss.mat + ss.inbred + ss.jk + ss.asymm)/ss.denom
 unexplained <- 1 - explained
 
-varps.all <- cbind(additive, parental.sex=mat.dev, inbred, inbred.overall, symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
+varps.all <- cbind(additive, parental.sex=mat.dev, inbred.overall, inbred,  symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
 varps.all.table <- cbind(mean=colMeans(varps.all), 
 	lower.bound=HPDinterval(as.mcmc(varps.all))[,1],
 	upper.bound=HPDinterval(as.mcmc(varps.all))[,2])
@@ -543,7 +543,7 @@ print(xtable(psq, digits=4), type="html")
 ## Plot dam\_strain and sire\_strain VarPs
 
 ```{r, messages=FALSE}
-varps.all.damsire <- cbind(dam.strain=maternal, sire.strain=paternal, inbred, inbred.overall, symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
+varps.all.damsire <- cbind(dam.strain=maternal, sire.strain=paternal, inbred.overall, inbred, symmetric.epistatic=epistatic.symm, asymmetric.epistatic=epistatic.asymm, total.explained=explained, noise=unexplained)
 
 varps.all.damsire.table <- cbind(mean=colMeans(varps.all.damsire), 
   lower.bound=HPDinterval(as.mcmc(varps.all.damsire))[,1],
