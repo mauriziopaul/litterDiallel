@@ -519,6 +519,21 @@ points(x = psq$mean, y = c(rows:1), pch = 16, col = "white",
     cex = 0.5)
 ```
 
+## Calculate scaled inbreeding coefficient
+
+```{r, message=FALSE}
+proj.for.scaled.inbreeding <- cbind.data.frame(projection, proj.determ.mu)
+proj.inbreds <- proj.for.scaled.inbreeding[proj.for.scaled.inbreeding$inbred==1,-c(1:3)]
+proj.hybrids <- proj.for.scaled.inbreeding[proj.for.scaled.inbreeding$inbred==0,-c(1:3)]
+proj.inbreds.means <- colMeans(proj.inbreds)
+proj.hybrids.means <- colMeans(proj.hybrids)
+proj.scaled.inbreeding <- (1-proj.inbreds.means/proj.hybrids.means)
+range(proj.scaled.inbreeding)
+mean(proj.scaled.inbreeding)
+median(proj.scaled.inbreeding)
+HPDinterval(as.mcmc(proj.scaled.inbreeding))
+```
+
 ## Table of results
 
 ```{r, results="asis"}
